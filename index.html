@@ -201,17 +201,6 @@
       }
     }
 
-    .card:nth-child(1) { animation-delay: 0.05s; }
-    .card:nth-child(2) { animation-delay: 0.1s; }
-    .card:nth-child(3) { animation-delay: 0.15s; }
-    .card:nth-child(4) { animation-delay: 0.2s; }
-    .card:nth-child(5) { animation-delay: 0.25s; }
-    .card:nth-child(6) { animation-delay: 0.3s; }
-    .card:nth-child(7) { animation-delay: 0.35s; }
-    .card:nth-child(8) { animation-delay: 0.4s; }
-    .card:nth-child(9) { animation-delay: 0.45s; }
-    .card:nth-child(10) { animation-delay: 0.5s; }
-
     .card a {
       color: var(--accent);
       text-decoration: none;
@@ -253,7 +242,7 @@
       <a href="#">По маркам</a>
       <a href="#">По ошибкам</a>
       <a href="my-car.html">Мое авто</a>
-      <a href="vin.html">Расшифровка VIN</a>
+      <!-- VIN-проверка удалена -->
     </nav>
 
     <div class="section">
@@ -354,7 +343,6 @@
     }
   </style>
 
-  <script src="db/problems.js"></script>
   <script>
     function escapeHtml(text) {
       if (typeof text !== 'string') return '';
@@ -468,15 +456,60 @@
     const YEARS_2000_2025 = Array.from({length:26},(_,i)=>2000+i);
     let allProblems = [];
 
-    try {
-      if (Array.isArray(window.problems)) {
-        allProblems = window.problems.filter(p => 
-          p && typeof p === 'object' && p.title && p.source_url
-        );
+    // ================== ИНИЦИАЛИЗАЦИЯ ==================
+    function initApp() {
+      // Загрузка данных
+      fetch('db/problems.json')
+        .then(response => {
+          if (!response.ok) throw new Error('Файл problems.json не найден');
+          return response.json();
+        })
+        .then(data => {
+          if (!Array.isArray(data)) throw new Error('Неверный формат данных');
+          allProblems = data.filter(p => p && typeof p === 'object' && p.title && p.source_url);
+          render(allProblems);
+          showLastUpdate();
+          restoreMyCar();
+        })
+        .catch(err => {
+          console.error('Ошибка загрузки базы:', err);
+          document.getElementById('loading').innerHTML = `
+            <p style="color: red; text-align: center;">❌ Ошибка загрузки базы</p>
+            <p style="text-align: center; margin-top: 10px;">Проверьте файл <code>db/problems.json</code></p>
+          `;
+          setTimeout(() => {
+            document.getElementById('loading').style.display = 'none';
+          }, 5000);
+          allProblems = [];
+          render(allProblems);
+        });
+    }
+
+    function restoreMyCar() {
+      const savedCarJson = localStorage.getItem('myCar');
+      if (savedCarJson) {
+        try {
+          const car = JSON.parse(savedCarJson);
+          if (car.brand && car.model && car.year && car.region) {
+            document.getElementById('regionFilter').value = car.region;
+            updateBrands();
+            setTimeout(() => {
+              document.getElementById('brandFilter').value = car.brand;
+              updateModels();
+              setTimeout(() => {
+                document.getElementById('modelFilter').value = car.model;
+                updateYears();
+                setTimeout(() => {
+                  document.getElementById('yearFilter').value = car.year;
+                  filterByBrandModelYear();
+                }, 10);
+              }, 10);
+            }, 10);
+          }
+        } catch (e) {
+          console.warn('Ошибка восстановления авто');
+        }
       }
-    } catch (e) {
-      console.error('Ошибка при загрузке данных:', e);
-      allProblems = [];
     }
 
     function updateBrands() {
@@ -543,16 +576,6 @@
       }
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      const errorInput = document.getElementById('errorInput');
-      if (errorInput) {
-        errorInput.addEventListener('keypress', (e) => {
-          if (e.key === 'Enter') searchByCode();
-        });
-        errorInput.focus();
-      }
-    });
-
     function render(problems) {
       const loadingEl = document.getElementById('loading');
       if (loadingEl) loadingEl.style.display = 'none';
@@ -594,7 +617,7 @@
               Симптомы: ${symptomsWithIcons}<br>
               Ошибки: ${(p.error_codes || []).map(c => escapeHtml(c)).join(', ')}
             </small><br>
-            <a href="${encodeURI(p.source_url)}" target="_blank">Подробности ${sourceLabel}</a>
+            <a href="${p.source_url}" target="_blank" rel="noopener noreferrer">Подробности ${sourceLabel}</a>
           </div>
         `;
       }).join('');
@@ -627,7 +650,6 @@
       render(filtered);
     }
 
-    // ← 4.2 и 4.5
     function exportToCSV() {
       if (allProblems.length === 0) {
         alert('База пуста');
@@ -659,51 +681,39 @@
     }
 
     function showLastUpdate() {
-      const now = new Date();
-      const today = now.toLocaleDateString('ru-RU'); // 12 мая 2025
-      document.getElementById('lastUpdate').textContent = `База обновлена: ${today}`;
+      const el = document.getElementById('lastUpdate');
+      try {
+        // Ищем последнюю дату обновления в данных
+        const dates = allProblems
+          .filter(p => p.lastUpdated)
+          .map(p => new Date(p.lastUpdated))
+          .filter(d => !isNaN(d.getTime()));
+        
+        if (dates.length > 0) {
+          const latest = new Date(Math.max.apply(null, dates));
+          el.textContent = `База обновлена: ${latest.toLocaleDateString('ru-RU')}`;
+        } else {
+          el.textContent = 'Дата обновления не указана';
+        }
+      } catch (e) {
+        el.textContent = 'Ошибка даты';
+      }
     }
 
-    render(allProblems);
-    showLastUpdate();
-
+    // Настройка инпута
     document.addEventListener('DOMContentLoaded', () => {
-      const savedCarJson = localStorage.getItem('myCar');
-      if (savedCarJson) {
-        try {
-          const car = JSON.parse(savedCarJson);
-          let regionFound = '';
-          for (const [region, brands] of Object.entries(BRAND_HIERARCHY)) {
-            if (brands[car.brand]) {
-              regionFound = region;
-              break;
-            }
-          }
-          if (regionFound) {
-            document.getElementById('regionFilter').value = regionFound;
-            updateBrands();
-            setTimeout(() => {
-              document.getElementById('brandFilter').value = car.brand;
-              updateModels();
-              setTimeout(() => {
-                if (car.model) {
-                  document.getElementById('modelFilter').value = car.model;
-                  updateYears();
-                }
-                setTimeout(() => {
-                  if (car.year && YEARS_2000_2025.includes(Number(car.year))) {
-                    document.getElementById('yearFilter').value = car.year;
-                  }
-                  filterByBrandModelYear();
-                }, 10);
-              }, 10);
-            }, 10);
-          }
-        } catch (e) {
-          console.warn('Ошибка при восстановлении "Моё авто"');
-        }
+      const errorInput = document.getElementById('errorInput');
+      if (errorInput) {
+        errorInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') searchByCode();
+        });
+        errorInput.focus();
       }
     });
+
+    // Запуск
+    initApp();
+    updateBrands();
   </script>
 </body>
 </html>
