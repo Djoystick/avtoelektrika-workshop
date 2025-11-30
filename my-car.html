@@ -163,7 +163,7 @@
         `;
         actions.innerHTML = `
           <button onclick="clearMyCar()">🗑️ Удалить из памяти</button>
-          <button onclick="searchInBase('${car.brand}')">🔍 Найти решения для ${car.brand}</button>
+          <button onclick="searchInBase('${car.brand}', '${car.model}')">🔍 Найти решения</button>
         `;
       }
 
@@ -172,8 +172,8 @@
         renderMyCar();
       }
 
-      function searchInBase(brand) {
-        localStorage.setItem('myCar', JSON.stringify({ brand }));
+      function searchInBase(brand, model) {
+        localStorage.setItem('myCar', JSON.stringify({ brand, model }));
         window.location.href = 'index.html';
       }
 
