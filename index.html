@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Помощник автоэлектрика</title>
-  <link rel="icon" href="image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23a8b8b0'/><circle cx='50' cy='50' r='32' fill='%232c6f3c'/><path d='M40 30 L60 30 L60 40 L70 40 L50 70 L30 40 L40 40 Z' fill='white'/></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23a8b8b0'/><circle cx='50' cy='50' r='32' fill='%232c6f3c'/><path d='M40 30 L60 30 L60 40 L70 40 L50 70 L30 40 L40 40 Z' fill='white'/></svg>">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -306,8 +306,39 @@
     <div id="results"></div>
   </div>
 
+  <!-- Загрузочный экран -->
+  <div id="loading" style="
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    color: var(--text-secondary);
+    font-family: 'IBM Plex Mono', monospace;
+  ">
+    <div style="
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    "></div>
+    <p style="margin-top: 16px;">Загрузка базы знаний...</p>
+  </div>
+
+  <style>
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+
   <script src="db/problems.js"></script>
   <script>
+    // Тема
     const themeToggle = document.getElementById('themeToggle');
     const body = document.body;
     const savedTheme = localStorage.getItem('theme');
@@ -322,6 +353,7 @@
       themeToggle.textContent = isDark ? '🌙' : '☀️';
     });
 
+    // Иерархия марок и моделей
     const BRAND_HIERARCHY = {
       "Европа": {
         "Audi": ["A3", "A4", "A5", "A6", "A7", "A8", "Q3", "Q5", "Q7", "TT", "R8"],
@@ -392,6 +424,7 @@
     const YEARS_2000_2025 = Array.from({length:26},(_,i)=>2000+i);
     let allProblems = window.problems || [];
 
+    // Функции фильтрации
     function updateBrands() {
       const region = document.getElementById('regionFilter').value;
       const brandSelect = document.getElementById('brandFilter');
@@ -457,6 +490,12 @@
     }
 
     function render(problems) {
+      // Скрыть загрузочный экран
+      const loadingEl = document.getElementById('loading');
+      if (loadingEl) {
+        loadingEl.style.display = 'none';
+      }
+
       const el = document.getElementById('results');
       document.getElementById('totalCount').textContent = problems.length;
       const uniqueBrands = new Set(allProblems.map(p => p.brand).filter(b => b));
@@ -510,8 +549,10 @@
       render(filtered);
     }
 
+    // Загрузка данных
     render(allProblems);
 
+    // Поддержка "Моё авто"
     document.addEventListener('DOMContentLoaded', () => {
       const savedCarJson = localStorage.getItem('myCar');
       if (savedCarJson) {
