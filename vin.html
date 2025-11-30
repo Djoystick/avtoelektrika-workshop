@@ -4,192 +4,152 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Расшифровка VIN</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%232b613f'/><circle cx='50' cy='50' r='32' fill='white'/><path d='M40 30 L60 30 L60 40 L70 40 L50 70 L30 40 L40 40 Z' fill='%232b613f'/></svg>">
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --bg: #ffffff;
-      --bg-card: #f8fafc;
-      --text: #1e293b;
-      --text-secondary: #64748b;
-      --border: #e2e8f0;
-      --accent: #2b613f;
-      --accent-hover: #234f34;
-      --header-bg: #f1f9f3;
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: 'IBM Plex Mono', monospace;
-      background-color: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
+      font-family: Arial, sans-serif;
       padding: 20px;
+      background: #fff;
+      color: #000;
     }
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    header {
+    .header {
       text-align: center;
-      padding: 28px 0;
-      margin-bottom: 24px;
-      background-color: var(--header-bg);
-      border-radius: 12px;
+      padding: 16px;
+      background: #f0f9f0;
+      border-radius: 8px;
+      margin-bottom: 20px;
     }
-    h1 { font-size: 2rem; color: var(--accent); margin-bottom: 10px; }
-    .subtitle { color: var(--text-secondary); }
-    nav {
+    h1 { color: #2b613f; margin: 0; }
+    .subtitle { color: #555; margin-top: 8px; }
+    .nav {
       display: flex;
       justify-content: center;
-      gap: 12px;
+      gap: 10px;
       margin: 16px 0;
-      flex-wrap: wrap;
     }
-    nav a {
+    .nav a {
       text-decoration: none;
-      color: var(--accent);
-      padding: 6px 14px;
-      border: 1px solid var(--border);
+      color: #000;
+      padding: 4px 12px;
+      border: 1px solid #ccc;
       border-radius: 20px;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
     }
-    nav a:hover { background: var(--accent); color: white; }
     input, button {
-      padding: 12px 16px;
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 1rem;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: var(--bg-card);
-      color: var(--text);
       width: 100%;
-      margin: 10px 0;
+      padding: 12px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
     }
     button {
-      background: var(--accent);
+      background: #2b613f;
       color: white;
-      border: none;
-      font-weight: 500;
+      font-weight: bold;
       cursor: pointer;
     }
-    button:hover {
-      background: var(--accent-hover);
-    }
-    .card {
-      background: var(--bg-card);
-      padding: 20px;
-      margin: 16px 0;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-      border-left: 4px solid var(--accent);
-    }
-    .info { color: var(--text-secondary); font-size: 0.9rem; margin: 10px 0; }
+    .info { color: #555; font-size: 0.9rem; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>Расшифровка VIN</h1>
-      <p class="subtitle">Введите 17-значный VIN вашего российского автомобиля (LADA, ВАЗ, ГАЗ, УАЗ)</p>
-    </header>
+  <div class="header">
+    <h1>Расшифровка VIN</h1>
+    <p class="subtitle">Введите 17-значный VIN российского автомобиля (LADA, ВАЗ и др.)</p>
+  </div>
 
-    <nav>
-      <a href="index.html">Главная</a>
-      <a href="my-car.html">Мое авто</a>
-    </nav>
+  <div class="nav">
+    <a href="index.html">Главная</a>
+    <a href="my-car.html">Моё авто</a>
+  </div>
 
-    <input type="text" id="vinInput" placeholder="Например: XTA210990V2162379" maxlength="17" />
-    <button onclick="decodeVIN()">Расшифровать VIN</button>
-    <p class="info">ℹ️ Поддерживаются только российские VIN. Для других авто используйте «Моё авто» → ручной ввод.</p>
+  <input type="text" id="vinInput" placeholder="Например: XTA210990V2162379" maxlength="17" />
+  <button onclick="decodeVIN()">Расшифровать VIN</button>
 
-    <div id="message"></div>
-    <div id="result"></div>
-    <button id="saveBtn" style="display:none;" onclick="saveToMyCar()">✅ Сохранить в «Моё авто»</button>
+  <p class="info">ℹ️ Поддерживаются только VIN, начинающиеся с XTA (ВАЗ/LADA)</p>
 
-    <script>
-      let currentVINData = null;
+  <div id="message"></div>
+  <div id="result"></div>
+  <button id="saveBtn" style="display:none;" onclick="saveToMyCar()">✅ Сохранить в «Моё авто»</button>
 
-      // База для российских VIN
-      function decodeRussianVIN(vin) {
-        if (!vin.startsWith('XTA')) return null; // LADA / ВАЗ
-        if (!vin.startsWith('XW8')) return null; // GAZ (пример)
+  <script>
+    // Глобальная переменная для хранения расшифрованного VIN
+    let currentVINData = null;
 
-        const yearCode = vin[9];
-        const yearMap = {
-          'X': 1999, 'Y': 2000, '1': 2001, '2': 2002, '3': 2003, '4': 2004,
-          '5': 2005, '6': 2006, '7': 2007, '8': 2008, '9': 2009,
-          'A': 2010, 'B': 2011, 'C': 2012, 'D': 2013, 'E': 2014,
-          'F': 2015, 'G': 2016, 'H': 2017, 'J': 2018, 'K': 2019,
-          'L': 2020, 'M': 2021, 'N': 2022, 'P': 2023, 'R': 2024, 'S': 2025
-        };
-        const year = yearMap[yearCode] || 'неизвестен';
+    function decodeVIN() {
+      const input = document.getElementById('vinInput');
+      const message = document.getElementById('message');
+      const result = document.getElementById('result');
+      const saveBtn = document.getElementById('saveBtn');
 
-        // Определяем модель по символам 4-7
-        const modelCode = vin.substring(3, 7);
-        let model = 'неизвестна';
-        if (modelCode.startsWith('210')) model = "ВАЗ 2101-2107";
-        if (modelCode.startsWith('211')) model = "ВАЗ 2110-2115";
-        if (modelCode.startsWith('217')) model = "Lada Priora";
-        if (modelCode.startsWith('219')) model = "Lada Kalina";
-        if (modelCode.startsWith('218')) model = "Lada Granta";
-        if (modelCode.startsWith('2192')) model = "Lada Kalina 2";
-        if (modelCode.startsWith('XRAY')) model = "Lada XRAY";
-        if (modelCode.startsWith('B15')) model = "Lada Vesta";
+      // Очистка
+      message.innerHTML = '';
+      result.innerHTML = '';
+      saveBtn.style.display = 'none';
 
-        return {
-          brand: "ВАЗ / LADA",
-          model: model,
-          year: year,
-          engine: "—",
-          body: "—"
-        };
+      const vin = (input.value || '').trim().toUpperCase();
+
+      // Проверка длины и формата
+      if (vin.length !== 17 || !/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)) {
+        message.innerHTML = '<span style="color:red;">VIN должен содержать 17 символов (без I, O, Q)</span>';
+        return;
       }
 
-      function decodeVIN() {
-        const vin = document.getElementById('vinInput').value.trim().toUpperCase();
-        const msg = document.getElementById('message');
-        const res = document.getElementById('result');
-        const saveBtn = document.getElementById('saveBtn');
-
-        msg.innerHTML = '';
-        res.innerHTML = '';
-        saveBtn.style.display = 'none';
-
-        if (vin.length !== 17 || !/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)) {
-          msg.innerHTML = '<div class="error">VIN должен содержать 17 символов (без I, O, Q)</div>';
-          return;
-        }
-
-        const decoded = decodeRussianVIN(vin);
-        if (!decoded) {
-          msg.innerHTML = '<div class="error">Поддерживаются только российские VIN (начинаются с XTA, XW8 и др.)</div>';
-          return;
-        }
-
-        currentVINData = {
-          vin: vin,
-          ...decoded
-        };
-
-        res.innerHTML = `
-          <div class="card">
-            <strong>${currentVINData.brand} ${currentVINData.model}</strong><br>
-            Год: ${currentVINData.year}<br>
-            Двигатель: ${currentVINData.engine || '—'}<br>
-            Кузов: ${currentVINData.body || '—'}<br>
-            VIN: ${currentVINData.vin}
-          </div>
-        `;
-        saveBtn.style.display = 'inline-block';
-        msg.innerHTML = '<div class="success">✅ VIN успешно расшифрован!</div>';
+      // Поддержка только XTA (ВАЗ / LADA)
+      if (!vin.startsWith('XTA')) {
+        message.innerHTML = '<span style="color:red;">Поддерживаются только российские VIN (начинаются с XTA)</span>';
+        return;
       }
 
-      function saveToMyCar() {
-        if (!currentVINData) return;
+      // Определение года по 10-му символу
+      const yearChar = vin[9];
+      const yearMap = {
+        'X': 1999, 'Y': 2000, '1': 2001, '2': 2002, '3': 2003, '4': 2004,
+        '5': 2005, '6': 2006, '7': 2007, '8': 2008, '9': 2009,
+        'A': 2010, 'B': 2011, 'C': 2012, 'D': 2013, 'E': 2014,
+        'F': 2015, 'G': 2016, 'H': 2017, 'J': 2018, 'K': 2019,
+        'L': 2020, 'M': 2021, 'N': 2022, 'P': 2023, 'R': 2024, 'S': 2025
+      };
+      const year = yearMap[yearChar] || 'неизвестен';
+
+      // Определение модели по позициям 4-7
+      const modelCode = vin.substring(3, 7);
+      let model = 'неизвестна';
+      if (modelCode.startsWith('210')) model = "ВАЗ 2101-2107";
+      else if (modelCode.startsWith('211')) model = "ВАЗ 2110-2115";
+      else if (modelCode.startsWith('217')) model = "Lada Priora";
+      else if (modelCode.startsWith('219')) model = "Lada Kalina";
+      else if (modelCode.startsWith('218')) model = "Lada Granta";
+      else if (modelCode === 'XRAY') model = "Lada XRAY";
+      else if (modelCode === 'B15R') model = "Lada Vesta";
+
+      // Сохраняем данные
+      currentVINData = {
+        vin: vin,
+        brand: "ВАЗ / LADA",
+        model: model,
+        year: year,
+        engine: "—",
+        body: "—"
+      };
+
+      // Показываем результат
+      result.innerHTML = `
+        <div style="background:#f8f8f8; padding:12px; border-left:3px solid #2b613f; margin-top:10px;">
+          <strong>${currentVINData.brand} ${currentVINData.model}</strong><br>
+          Год: ${currentVINData.year}<br>
+          VIN: ${currentVINData.vin}
+        </div>
+      `;
+      message.innerHTML = '<span style="color:green;">✅ VIN успешно расшифрован!</span>';
+      saveBtn.style.display = 'inline-block';
+    }
+
+    function saveToMyCar() {
+      if (currentVINData) {
         localStorage.setItem('myCar', JSON.stringify(currentVINData));
         alert('✅ Автомобиль сохранён в «Моё авто»!');
       }
-    </script>
-  </div>
+    }
+  </script>
 </body>
 </html>
