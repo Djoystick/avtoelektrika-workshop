@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Помощник автоэлектрика</title>
-  <link rel="icon" href="image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23a8b8b0'/><circle cx='50' cy='50' r='32' fill='%232c6f3c'/><path d='M40 30 L60 30 L60 40 L70 40 L50 70 L30 40 L40 40 Z' fill='white'/></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23a8b8b0'/><circle cx='50' cy='50' r='32' fill='%232c6f3c'/><path d='M40 30 L60 30 L60 40 L70 40 L50 70 L30 40 L40 40 Z' fill='white'/></svg>">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -190,8 +190,8 @@
       opacity: 0;
       transform: translateY(10px);
       animation: fadeInUp 0.4s forwards;
-      will-change: opacity, transform; /* ← 2.3 */
-      max-width: 100%; /* ← 2.5 */
+      will-change: opacity, transform;
+      max-width: 100%;
     }
 
     @keyframes fadeInUp {
@@ -201,7 +201,6 @@
       }
     }
 
-    /* Анимации с задержкой */
     .card:nth-child(1) { animation-delay: 0.05s; }
     .card:nth-child(2) { animation-delay: 0.1s; }
     .card:nth-child(3) { animation-delay: 0.15s; }
@@ -223,7 +222,6 @@
       text-decoration: underline;
     }
 
-    /* Мобильная адаптация */
     @media (max-width: 600px) {
       .controls {
         flex-direction: column;
@@ -347,7 +345,18 @@
 
   <script src="db/problems.js"></script>
   <script>
-    // Тема
+    function escapeHtml(text) {
+      if (typeof text !== 'string') return '';
+      const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      };
+      return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
     const themeToggle = document.getElementById('themeToggle');
     const body = document.body;
     const savedTheme = localStorage.getItem('theme');
@@ -362,7 +371,6 @@
       themeToggle.textContent = isDark ? '🌙' : '☀️';
     });
 
-    // Иконки для симптомов ← 2.4
     const SYMPTOM_ICONS = {
       'не заводится': '🚗',
       'check engine': '⚠️',
@@ -379,7 +387,6 @@
       'генератор': '🌀'
     };
 
-    // Иерархия марок и моделей
     const BRAND_HIERARCHY = {
       "Европа": {
         "Audi": ["A3", "A4", "A5", "A6", "A7", "A8", "Q3", "Q5", "Q7", "TT", "R8"],
@@ -448,9 +455,19 @@
     };
 
     const YEARS_2000_2025 = Array.from({length:26},(_,i)=>2000+i);
-    let allProblems = window.problems || [];
+    let allProblems = [];
 
-    // Функции фильтрации
+    try {
+      if (Array.isArray(window.problems)) {
+        allProblems = window.problems.filter(p => 
+          p && typeof p === 'object' && p.title && p.source_url
+        );
+      }
+    } catch (e) {
+      console.error('Ошибка при загрузке данных:', e);
+      allProblems = [];
+    }
+
     function updateBrands() {
       const region = document.getElementById('regionFilter').value;
       const brandSelect = document.getElementById('brandFilter');
@@ -515,14 +532,13 @@
       }
     }
 
-    // Поддержка Enter ← 2.6
     document.addEventListener('DOMContentLoaded', () => {
       const errorInput = document.getElementById('errorInput');
       if (errorInput) {
         errorInput.addEventListener('keypress', (e) => {
           if (e.key === 'Enter') searchByCode();
         });
-        errorInput.focus(); // ← 2.2
+        errorInput.focus();
       }
     });
 
@@ -543,24 +559,23 @@
       }
 
       el.innerHTML = problems.map(p => {
-        // Иконки для симптомов ← 2.4
         const symptomsWithIcons = (p.symptoms || []).map(symptom => {
           const key = Object.keys(SYMPTOM_ICONS).find(k => symptom.toLowerCase().includes(k));
           const icon = key ? SYMPTOM_ICONS[key] : '🔧';
-          return `${icon} ${symptom}`;
+          return `${icon} ${escapeHtml(symptom)}`;
         }).join(', ');
 
         return `
           <div class="card">
-            <strong>${p.title}</strong><br>
+            <strong>${escapeHtml(p.title)}</strong><br>
             <small>
-              ${p.brand ? 'Марка: ' + p.brand + ' | ' : ''}
-              ${p.model ? 'Модель: ' + p.model + ' | ' : ''}
-              ${p.year ? 'Год: ' + p.year + ' | ' : ''}
+              ${p.brand ? 'Марка: ' + escapeHtml(p.brand) + ' | ' : ''}
+              ${p.model ? 'Модель: ' + escapeHtml(p.model) + ' | ' : ''}
+              ${p.year ? 'Год: ' + escapeHtml(String(p.year)) + ' | ' : ''}
               Симптомы: ${symptomsWithIcons}<br>
-              Ошибки: ${(p.error_codes || []).join(', ')}
+              Ошибки: ${(p.error_codes || []).map(c => escapeHtml(c)).join(', ')}
             </small><br>
-            <a href="${p.source_url}" target="_blank">Подробности</a>
+            <a href="${encodeURI(p.source_url)}" target="_blank">Подробности</a>
           </div>
         `;
       }).join('');
@@ -595,7 +610,6 @@
 
     render(allProblems);
 
-    // Поддержка "Моё авто"
     document.addEventListener('DOMContentLoaded', () => {
       const savedCarJson = localStorage.getItem('myCar');
       if (savedCarJson) {
