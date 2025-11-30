@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Моё авто</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23a8b8b0'/><circle cx='50' cy='50' r='32' fill='%232c6f3c'/><path d='M40 30 L60 30 L60 40 L70 40 L50 70 L30 40 L40 40 Z' fill='white'/></svg>">
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%232b613f'/><circle cx='50' cy='50' r='32' fill='white'/><path d='M40 30 L60 30 L60 40 L70 40 L50 70 L30 40 L40 40 Z' fill='%232b613f'/></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #ffffff;
@@ -13,28 +13,15 @@
       --text: #1e293b;
       --text-secondary: #64748b;
       --border: #e2e8f0;
-      --accent: #2c6f3c;
-      --accent-hover: #255d32;
-      --shadow: rgba(0,0,0,0.04);
+      --accent: #2b613f;
+      --accent-hover: #234f34;
       --header-bg: #f1f9f3;
-    }
-    .dark-theme {
-      --bg: #12181a;
-      --bg-card: #1e292d;
-      --text: #e2e8f0;
-      --text-secondary: #94a8b8;
-      --border: #33414a;
-      --accent: #4caf50;
-      --accent-hover: #43a047;
-      --shadow: rgba(0,0,0,0.25);
-      --header-bg: #162123;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'IBM Plex Mono', monospace;
       background-color: var(--bg);
       color: var(--text);
-      transition: background-color 0.3s, color 0.3s;
       line-height: 1.6;
       padding: 20px;
     }
@@ -44,12 +31,12 @@
     }
     header {
       text-align: center;
-      padding: 24px 0;
+      padding: 28px 0;
       margin-bottom: 24px;
       background-color: var(--header-bg);
-      border-radius: 4px;
+      border-radius: 12px;
     }
-    h1 { font-size: 2rem; color: var(--accent); margin-bottom: 8px; font-weight: 500; }
+    h1 { font-size: 2rem; color: var(--accent); margin-bottom: 10px; }
     .subtitle { color: var(--text-secondary); }
     nav {
       display: flex;
@@ -63,58 +50,56 @@
       color: var(--accent);
       padding: 6px 14px;
       border: 1px solid var(--border);
-      border-radius: 0;
+      border-radius: 20px;
       font-size: 0.95rem;
-      font-weight: 500;
     }
     nav a:hover { background: var(--accent); color: white; }
-    .theme-toggle {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: var(--bg-card);
+    .form-group {
+      margin: 16px 0;
+    }
+    label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--text-secondary);
+    }
+    select, button {
+      padding: 10px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.95rem;
       border: 1px solid var(--border);
+      border-radius: 8px;
+      width: 100%;
+      background: var(--bg-card);
       color: var(--text);
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
     }
     button {
-      padding: 10px 16px;
-      margin: 8px 8px 8px 0;
-      font-family: 'IBM Plex Mono', monospace;
       background: var(--accent);
       color: white;
-      border: 1px solid var(--accent);
-      border-radius: 0;
-      cursor: pointer;
+      border: none;
       font-weight: 500;
-      transition: background 0.15s;
+      cursor: pointer;
+      width: auto;
+      display: inline-block;
     }
     button:hover {
       background: var(--accent-hover);
     }
     .card {
       background: var(--bg-card);
-      padding: 18px;
+      padding: 20px;
       margin: 16px 0;
-      border-radius: 4px;
-      box-shadow: 0 2px 6px var(--shadow);
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
       border-left: 4px solid var(--accent);
     }
-    .empty { color: var(--text-secondary); font-style: italic; }
+    .empty { color: var(--text-secondary); font-style: italic; text-align: center; padding: 20px; }
   </style>
 </head>
 <body>
-  <div class="theme-toggle" id="themeToggle">☀️</div>
   <div class="container">
     <header>
       <h1>Моё авто</h1>
-      <p class="subtitle">Сохранённый автомобиль для быстрого поиска решений</p>
+      <p class="subtitle">Сохраните свой автомобиль для быстрого поиска решений</p>
     </header>
 
     <nav>
@@ -122,49 +107,108 @@
       <a href="vin.html">Расшифровка VIN</a>
     </nav>
 
-    <div id="carInfo"></div>
-    <div id="actions"></div>
+    <div class="form-group">
+      <label>Марка</label>
+      <select id="manualBrand">
+        <option value="">— Выберите —</option>
+        <option value="ВАЗ / LADA">ВАЗ / LADA</option>
+        <option value="ГАЗ">ГАЗ</option>
+        <option value="УАЗ">УАЗ</option>
+        <option value="Москвич">Москвич</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Модель</label>
+      <select id="manualModel">
+        <option value="">— Сначала выберите марку —</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Год выпуска</label>
+      <select id="manualYear">
+        <option value="">— Выберите —</option>
+        <!-- Заполнится JS -->
+      </select>
+    </div>
+
+    <button onclick="saveManualCar()">✅ Сохранить автомобиль</button>
+
+    <div id="savedCar"></div>
 
     <script>
-      const themeToggle = document.getElementById('themeToggle');
-      const body = document.body;
-      const savedTheme = localStorage.getItem('theme');
-      if (savedTheme === 'dark') {
-        body.classList.add('dark-theme');
-        themeToggle.textContent = '🌙';
+      const MODELS = {
+        "ВАЗ / LADA": ["2101", "2106", "2107", "2110", "2112", "2114", "Granta", "Kalina", "Largus", "Vesta", "XRAY"],
+        "ГАЗ": ["GAZ-3110", "GAZelle", "Sobol"],
+        "УАЗ": ["Hunter", "Patriot", "Profi"],
+        "Москвич": ["412", "2141", "3110"]
+      };
+
+      function populateModels() {
+        const brand = document.getElementById('manualBrand').value;
+        const modelSelect = document.getElementById('manualModel');
+        modelSelect.innerHTML = '<option value="">— Выберите модель —</option>';
+        if (brand && MODELS[brand]) {
+          MODELS[brand].forEach(m => {
+            const opt = document.createElement('option');
+            opt.value = m;
+            opt.textContent = m;
+            modelSelect.appendChild(opt);
+          });
+        }
       }
-      themeToggle.addEventListener('click', () => {
-        body.classList.toggle('dark-theme');
-        const isDark = body.classList.contains('dark-theme');
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        themeToggle.textContent = isDark ? '🌙' : '☀️';
-      });
+
+      function populateYears() {
+        const yearSelect = document.getElementById('manualYear');
+        yearSelect.innerHTML = '<option value="">— Выберите год —</option>';
+        for (let y = 1990; y <= 2025; y++) {
+          const opt = document.createElement('option');
+          opt.value = y;
+          opt.textContent = y;
+          yearSelect.appendChild(opt);
+        }
+      }
+
+      function saveManualCar() {
+        const brand = document.getElementById('manualBrand').value;
+        const model = document.getElementById('manualModel').value;
+        const year = document.getElementById('manualYear').value;
+
+        if (!brand || !model || !year) {
+          alert('Заполните все поля');
+          return;
+        }
+
+        const car = { brand, model, year, vin: 'ручной ввод' };
+        localStorage.setItem('myCar', JSON.stringify(car));
+        renderMyCar();
+        alert('✅ Автомобиль сохранён!');
+      }
 
       function renderMyCar() {
         const saved = localStorage.getItem('myCar');
-        const info = document.getElementById('carInfo');
-        const actions = document.getElementById('actions');
+        const el = document.getElementById('savedCar');
 
         if (!saved) {
-          info.innerHTML = '<p class="empty">Вы ещё не сохранили автомобиль.</p>';
-          actions.innerHTML = '';
+          el.innerHTML = '<p class="empty">Вы ещё не сохранили автомобиль.<br>Используйте VIN или введите вручную.</p>';
           return;
         }
 
         const car = JSON.parse(saved);
-        info.innerHTML = `
+        el.innerHTML = `
           <div class="card">
             <strong>${car.brand} ${car.model}</strong><br>
             Год: ${car.year}<br>
-            Двигатель: ${car.engine || '—'}<br>
-            Кузов: ${car.body || '—'}<br>
-            VIN: ${car.vin}
+            <button onclick="useCarInSearch('${car.brand}', '${car.model}')">🔍 Найти решения</button>
+            <button onclick="clearMyCar()">🗑️ Удалить</button>
           </div>
         `;
-        actions.innerHTML = `
-          <button onclick="clearMyCar()">🗑️ Удалить из памяти</button>
-          <button onclick="searchInBase('${car.brand}', '${car.model}')">🔍 Найти решения</button>
-        `;
+      }
+
+      function useCarInSearch(brand, model) {
+        localStorage.setItem('myCar', JSON.stringify({ brand, model }));
+        window.location.href = 'index.html';
       }
 
       function clearMyCar() {
@@ -172,12 +216,11 @@
         renderMyCar();
       }
 
-      function searchInBase(brand, model) {
-        localStorage.setItem('myCar', JSON.stringify({ brand, model }));
-        window.location.href = 'index.html';
-      }
-
-      renderMyCar();
+      document.getElementById('manualBrand').addEventListener('change', populateModels);
+      window.onload = () => {
+        populateYears();
+        renderMyCar();
+      };
     </script>
   </div>
 </body>
