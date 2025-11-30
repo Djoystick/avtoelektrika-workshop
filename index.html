@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Помощник автоэлектрика</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%232c6f3c'/><circle cx='50' cy='50' r='30' fill='white'/><path d='M40 30 L60 30 L60 40 L70 40 L50 70 L30 40 L40 40 Z' fill='%232c6f3c'/></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23a8b8b0'/><circle cx='50' cy='50' r='32' fill='%232c6f3c'/><path d='M40 30 L60 30 L60 40 L70 40 L50 70 L30 40 L40 40 Z' fill='white'/></svg>">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -82,9 +82,10 @@
       font-size: 0.95rem;
       padding: 6px 14px;
       border: 1px solid var(--border);
-      border-radius: 20px;
+      border-radius: 0; /* осциллограф */
       transition: all 0.2s;
       font-weight: 500;
+      background: transparent;
     }
 
     nav a:hover {
@@ -139,7 +140,7 @@
       font-family: 'IBM Plex Mono', monospace;
       font-size: 0.95rem;
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 0; /* осциллограф */
       background: var(--bg-card);
       color: var(--text);
       transition: border-color 0.2s, box-shadow 0.2s;
@@ -159,12 +160,14 @@
       background-color: var(--accent);
       color: white;
       cursor: pointer;
-      border: none;
+      border: 1px solid var(--accent);
       font-weight: 500;
+      transition: background 0.15s, transform 0.1s;
     }
 
     button:hover, .controls button:hover {
       background-color: var(--accent-hover);
+      transform: translateY(-1px);
     }
 
     .stats {
@@ -182,10 +185,31 @@
       background: var(--bg-card);
       padding: 18px;
       margin: 16px 0;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px var(--shadow);
+      border-radius: 4px; /* слегка угловато */
+      box-shadow: 0 2px 6px var(--shadow);
       border-left: 4px solid var(--accent);
+      opacity: 0;
+      transform: translateY(10px);
+      animation: fadeInUp 0.4s forwards;
     }
+
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .card:nth-child(1) { animation-delay: 0.05s; }
+    .card:nth-child(2) { animation-delay: 0.1s; }
+    .card:nth-child(3) { animation-delay: 0.15s; }
+    .card:nth-child(4) { animation-delay: 0.2s; }
+    .card:nth-child(5) { animation-delay: 0.25s; }
+    .card:nth-child(6) { animation-delay: 0.3s; }
+    .card:nth-child(7) { animation-delay: 0.35s; }
+    .card:nth-child(8) { animation-delay: 0.4s; }
+    .card:nth-child(9) { animation-delay: 0.45s; }
+    .card:nth-child(10) { animation-delay: 0.5s; }
 
     .card a {
       color: var(--accent);
@@ -281,7 +305,6 @@
 
   <script src="data/problems.js"></script>
   <script>
-    // === Тема ===
     const themeToggle = document.getElementById('themeToggle');
     const body = document.body;
     const savedTheme = localStorage.getItem('theme');
@@ -296,34 +319,16 @@
       themeToggle.textContent = isDark ? '🌙' : '☀️';
     });
 
-    // === Иерархия марок (2000–2025) ===
     const BRAND_HIERARCHY = {
-      "Европа": [
-        "Audi", "BMW", "Mercedes-Benz", "Volkswagen", "Skoda", "Seat",
-        "Porsche", "Volvo", "Saab", "Alfa Romeo", "Fiat", "Lancia",
-        "Renault", "Peugeot", "Citroen", "DS", "Opel", "Vauxhall"
-      ],
-      "Япония": [
-        "Toyota", "Honda", "Nissan", "Mitsubishi", "Subaru", "Mazda",
-        "Suzuki", "Lexus", "Infiniti", "Daihatsu", "Isuzu"
-      ],
-      "Корея": [
-        "Hyundai", "Kia", "SsangYong"
-      ],
-      "США": [
-        "Ford", "Chevrolet", "Jeep", "Dodge", "Chrysler", "Cadillac",
-        "GMC", "Tesla", "Lincoln", "Buick"
-      ],
-      "Россия": [
-        "ВАЗ / LADA", "ГАЗ", "УАЗ", "Москвич"
-      ],
-      "Китай": [
-        "Geely", "Chery", "Haval", "Great Wall", "Lifan", "BYD",
-        "Changan", "JAC", "FAW", "Dongfeng"
-      ]
+      "Европа": ["Audi","BMW","Mercedes-Benz","Volkswagen","Skoda","Seat","Porsche","Volvo","Saab","Alfa Romeo","Fiat","Lancia","Renault","Peugeot","Citroen","DS","Opel","Vauxhall"],
+      "Япония": ["Toyota","Honda","Nissan","Mitsubishi","Subaru","Mazda","Suzuki","Lexus","Infiniti","Daihatsu","Isuzu"],
+      "Корея": ["Hyundai","Kia","SsangYong"],
+      "США": ["Ford","Chevrolet","Jeep","Dodge","Chrysler","Cadillac","GMC","Tesla","Lincoln","Buick"],
+      "Россия": ["ВАЗ / LADA","ГАЗ","УАЗ","Москвич"],
+      "Китай": ["Geely","Chery","Haval","Great Wall","Lifan","BYD","Changan","JAC","FAW","Dongfeng"]
     };
 
-    const YEARS_2000_2025 = Array.from({length: 26}, (_, i) => 2000 + i);
+    const YEARS_2000_2025 = Array.from({length:26},(_,i)=>2000+i);
     let allProblems = window.problems || [];
 
     function updateBrands() {
