@@ -5,43 +5,112 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Помощник автоэлектрика</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; }
-    .card { background: #f9f9f9; padding: 16px; margin: 12px 0; border-left: 4px solid #007bff; }
-    input, button, select { padding: 8px; margin: 6px; }
-    h2 { margin-top: 24px; }
-    .stats { color: #666; font-size: 0.9em; margin-top: 10px; }
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #fff;
+      color: #333;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    nav {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin: 16px 0;
+      flex-wrap: wrap;
+    }
+    nav a {
+      text-decoration: none;
+      color: #007bff;
+      font-weight: bold;
+      padding: 6px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    nav a:hover {
+      background: #f0f8ff;
+    }
+    .section {
+      margin: 24px 0;
+    }
+    .controls {
+      margin: 12px 0;
+    }
+    input, button, select {
+      padding: 8px;
+      margin: 6px;
+      font-size: 14px;
+    }
+    .card {
+      background: #f9f9f9;
+      padding: 16px;
+      margin: 12px 0;
+      border-left: 4px solid #007bff;
+      border-radius: 4px;
+    }
+    .stats {
+      display: flex;
+      gap: 20px;
+      margin: 16px 0;
+      color: #555;
+      font-size: 0.95em;
+    }
+    h1, h2 {
+      margin: 20px 0 12px;
+    }
   </style>
 </head>
 <body>
-  <h1>Помощник автоэлектрика</h1>
-  <p>Профессиональная база знаний по диагностике и ремонту</p>
+  <header>
+    <h1>Помощник автоэлектрика</h1>
+    <p>Профессиональная база знаний по диагностике и ремонту</p>
+  </header>
 
-  <h2>По марке авто</h2>
-  <select id="brandFilter" onchange="filterByBrand()">
-    <option value="">— Все марки —</option>
-    <!-- Опции будут подгружены динамически -->
-  </select>
+  <nav>
+    <a href="index.html">Главная</a>
+    <a href="#">По маркам</a>
+    <a href="#">По ошибкам</a>
+    <a href="my-car.html">Мое авто</a>
+    <a href="vin.html">Расшифровка VIN</a>
+  </nav>
 
-  <h2>По симптомам</h2>
-  <div>
-    <button onclick="filterBySymptom('не заводится')">Не заводится</button>
-    <button onclick="filterBySymptom('горит check engine')">Горит Check Engine</button>
-    <button onclick="filterBySymptom('утечка тока')">⚡ Утечка тока</button>
-    <button onclick="filterBySymptom('нет зарядки')">Нет зарядки</button>
-    <button onclick="filterBySymptom('троит')">Троит</button>
+  <div class="section">
+    <h2>По марке авто</h2>
+    <select id="brandFilter" onchange="filterByBrand()">
+      <option value="">— Все марки —</option>
+    </select>
   </div>
 
-  <h2>По коду ошибки</h2>
-  <input type="text" id="errorInput" placeholder="Например: P0300" />
-  <button onclick="searchByCode()">Найти</button>
+  <div class="section">
+    <h2>Ищу решение по симптому</h2>
+    <div class="controls">
+      <button onclick="filterBySymptom('не заводится')">Не заводится</button>
+      <button onclick="filterBySymptom('горит check engine')">Горит Check Engine</button>
+      <button onclick="filterBySymptom('троит')">Троит двигатель</button>
+      <button onclick="filterBySymptom('нет зарядки')">Нет зарядки</button>
+      <button onclick="filterBySymptom('утечка тока')">⚡ Утечка тока</button>
+      <button onclick="filterBySymptom('стучит')">Стучит</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Поиск по коду ошибки</h2>
+    <input type="text" id="errorInput" placeholder="Например: P0300" />
+    <button onclick="searchByCode()">Найти</button>
+  </div>
 
   <div class="stats">
-    <span id="totalCount">0</span> решений,
-    <span id="brandCount">0</span> марок,
-    <span id="errorCount">0</span> кодов ошибок
+    <div><strong id="totalCount">0</strong> Инструкций</div>
+    <div><strong id="brandCount">0</strong> Марок авто</div>
+    <div><strong id="errorCount">0</strong> Кодов ошибок</div>
   </div>
 
-  <h2>Все решения</h2>
+  <h2>Топ решений</h2>
   <div id="results"></div>
 
   <script src="data/problems.js"></script>
@@ -118,6 +187,19 @@
     // Инициализация
     populateBrandFilter();
     render(allProblems);
+
+    // При загрузке: проверить, не сохранили ли марку из "Моё авто"
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedBrand = localStorage.getItem('autoFilterBrand');
+      if (savedBrand) {
+        localStorage.removeItem('autoFilterBrand'); // одноразовое применение
+        const select = document.getElementById('brandFilter');
+        if (select) {
+          select.value = savedBrand;
+          filterByBrand();
+        }
+      }
+    });
   </script>
 </body>
 </html>
