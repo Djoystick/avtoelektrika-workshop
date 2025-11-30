@@ -1,1 +1,13 @@
-
+[
+  {
+    "title": "...",
+    "brand": "LADA",
+    "model": "Granta",
+    "year": 2015,
+    "symptoms": ["не заводится"],
+    "error_codes": ["P0300"],
+    "source": "drive2",
+    "source_url": "https://...",
+    "lastUpdated": "2025-11-30"
+  }
+]
