@@ -1,88 +1,174 @@
 import os
 import json
 import re
+import time
+import hashlib
+from pathlib import Path
+from urllib.parse import urljoin, urlparse
+
 import requests
 from bs4 import BeautifulSoup
 
-# Источник: последние темы drive2.ru (раздел "Электрооборудование")
-URL = "https://drive2.ru/forums/elektrooborudovanie.107/"
+# === Настройки ===
+SOURCES = [
+    {
+        "name": "drive2",
+        "base_url": "https://drive2.ru",
+        "forum_url": "https://drive2.ru/forums/elektrooborudovanie.107/",
+        "thread_selector": "div.structItem--thread",
+        "title_selector": "div.structArg-title a",
+        "link_selector": "div.structArg-title a",
+        "content_url_template": None  # ссылка уже ведёт на тему
+    },
+    {
+        "name": "drom",
+        "base_url": "https://www.drom.ru",
+        "forum_url": "https://www.drom.ru/forum/elektrooborudovanie/",
+        "thread_selector": "div.b-topic",
+        "title_selector": "a.b-topic__title",
+        "link_selector": "a.b-topic__title",
+        "content_url_template": None
+    },
+    {
+        "name": "don",
+        "base_url": "https://forums.don.ru",
+        "forum_url": "https://forums.don.ru/forumdisplay.php?f=30",  # Электрика
+        "thread_selector": "tr.threadbit",
+        "title_selector": "a.title",
+        "link_selector": "a.title",
+        "content_url_template": None
+    }
+]
 
-def extract_problems():
-    resp = requests.get(URL, headers={'User-Agent': 'Mozilla/5.0'})
+# === Марки и симптомы ===
+KNOWN_BRANDS = [
+    'ваз', 'лада', 'toyota', 'bmw', 'audi', 'ford', 'opel', 'renault',
+    'kia', 'hyundai', 'volkswagen', 'skoda', 'chevrolet', 'nissan', 'mitsubishi'
+]
+
+SYMPTOM_KEYWORDS = [
+    'не заводится', 'check engine', 'горит чек', 'утечка тока', 'нет зарядки',
+    'троит', 'стучит', 'мертвый аккумулял', 'короткое замыкание', 'обрыв',
+    'модуль зажигания', 'датчик коленвала', 'генератор'
+]
+
+# === Кэширование ===
+CACHE_DIR = Path("cache")
+CACHE_DIR.mkdir(exist_ok=True)
+
+def get_cache_key(url):
+    return hashlib.md5(url.encode()).hexdigest() + ".html"
+
+def fetch_cached(url, cache_hours=24):
+    cache_file = CACHE_DIR / get_cache_key(url)
+    if cache_file.exists():
+        mtime = cache_file.stat().st_mtime
+        if time.time() - mtime < cache_hours * 3600:
+            with open(cache_file, 'r', encoding='utf-8') as f:
+                return f.read()
+    # Запрос
+    resp = requests.get(url, headers={'User-Agent': 'AutoElectroBot/1.0'})
     resp.raise_for_status()
-    soup = BeautifulSoup(resp.text, 'html.parser')
-    threads = soup.select('div.structItem--thread')
+    html = resp.text
+    with open(cache_file, 'w', encoding='utf-8') as f:
+        f.write(html)
+    time.sleep(1)  # вежливая пауза
+    return html
 
-    problems = []
-    for t in threads[:10]:  # последние 10 тем
-        title_elem = t.select_one('div.structItem-title a')
-        if not title_elem:
-            continue
-        title = title_elem.get_text(strip=True)
-        link = 'https://drive2.ru' + title_elem['href']
+# === Извлечение кодов ошибок ===
+def extract_error_codes(text):
+    # OBD2 + некоторые OEM-форматы
+    pattern = r'\b[PCBU]\d{4}\b'
+    return list(set(re.findall(pattern, text, re.IGNORECASE)))
 
-        # Фильтр: только темы про типичные симптомы
-        symptom_keywords = ['не заводится', 'check engine', 'утечка', 'нет зарядки', 'троит', 'стучит']
-        symptoms = []
-        for k in symptom_keywords:
-            if k in title.lower():
-                symptoms.append(k)
+# === Парсинг одного форума ===
+def scrape_forum(source):
+    print(f"Парсинг: {source['name']}")
+    try:
+        html = fetch_cached(source['forum_url'])
+        soup = BeautifulSoup(html, 'html.parser')
+        threads = soup.select(source['thread_selector'])
+        problems = []
+        for thread in threads[:8]:  # не более 8 тем на источник
+            title_elem = thread.select_one(source['title_selector'])
+            link_elem = thread.select_one(source['link_selector'])
+            if not title_elem or not link_elem:
+                continue
+            title = title_elem.get_text(strip=True)
+            rel_link = link_elem['href']
+            abs_link = urljoin(source['base_url'], rel_link)
 
-        if not symptoms:
-            continue
+            # Кэшируем и читаем содержимое темы
+            try:
+                content_html = fetch_cached(abs_link, cache_hours=168)  # кэш 7 дней
+                content_text = BeautifulSoup(content_html, 'html.parser').get_text()
+                error_codes = extract_error_codes(content_text)
+            except Exception as e:
+                print(f"Ошибка при парсинге темы {abs_link}: {e}")
+                error_codes = []
 
-        # Определяем марку по названию (очень упрощённо)
-        brand = None
-        known_brands = ['ваз', 'лада', 'toyota', 'bmw', 'audi', 'ford', 'opel', 'renault', 'kia', 'hyundai']
-        for b in known_brands:
-            if b in title.lower():
-                brand = b.upper()
-                break
+            # Определяем марку
+            brand = None
+            for b in KNOWN_BRANDS:
+                if b in title.lower():
+                    brand = b.upper()
+                    break
 
-        problems.append({
-            "id": link,
-            "title": title,
-            "brand": brand,
-            "symptoms": symptoms,
-            "error_codes": [],  # можно расширить парсингом текста темы
-            "source_url": link,
-            "date_added": "2025-11-29"
-        })
-    return problems
+            # Симптомы
+            symptoms = []
+            for k in SYMPTOM_KEYWORDS:
+                if k in title.lower() or k in content_text.lower():
+                    symptoms.append(k)
 
+            if symptoms or error_codes:
+                problems.append({
+                    "id": f"{source['name']}_{hash(abs_link)}",
+                    "title": title,
+                    "brand": brand,
+                    "symptoms": symptoms,
+                    "error_codes": error_codes,
+                    "source_url": abs_link,
+                    "date_added": time.strftime("%Y-%m-%d")
+                })
+        return problems
+    except Exception as e:
+        print(f"Ошибка при парсинге {source['name']}: {e}")
+        return []
+
+# === Основная логика ===
 def load_existing():
-    path = os.path.join('_data', 'problems.json')
-    if os.path.exists(path):
+    path = Path("_data/problems.json")
+    if path.exists():
         with open(path, 'r', encoding='utf-8') as f:
             return json.load(f)
     return []
 
-def save_problems(all_problems):
-    # Удалить дубли по id
-    seen = set()
-    unique = []
-    for p in all_problems:
-        if p['id'] not in seen:
-            unique.append(p)
-            seen.add(p['id'])
-    
-    with open('_data/problems.json', 'w', encoding='utf-8') as f:
-        json.dump(unique, f, ensure_ascii=False, indent=2)
+def save_problems(problems):
+    path = Path("_data/problems.json")
+    path.parent.mkdir(exist_ok=True)
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump(problems, f, ensure_ascii=False, indent=2)
 
-    # Генерация JS-файла
-    with open('data/problems.js', 'w', encoding='utf-8') as f:
-        json_str = json.dumps(unique, ensure_ascii=False, indent=2)
-        f.write(f'window.problems = {json_str};\n')
+    js_path = Path("data/problems.js")
+    js_path.parent.mkdir(exist_ok=True)
+    with open(js_path, 'w', encoding='utf-8') as f:
+        json_str = json.dumps(problems, ensure_ascii=False, indent=2)
+        f.write(f"window.problems = {json_str};\n")
+
+def main():
+    existing = {p['id']: p for p in load_existing()}
+    new_problems = []
+
+    for src in SOURCES:
+        new_problems.extend(scrape_forum(src))
+
+    # Объединяем, избегая дублей
+    for p in new_problems:
+        existing[p['id']] = p
+
+    final_list = list(existing.values())
+    save_problems(final_list)
+    print(f"Обновлено. Всего записей: {len(final_list)}")
 
 if __name__ == '__main__':
-    os.makedirs('_data', exist_ok=True)
-    os.makedirs('data', exist_ok=True)
-    
-    existing = load_existing()
-    new = extract_problems()
-    
-    # Объединить (новые в начало)
-    combined = new + [p for p in existing if p['id'] not in {n['id'] for n in new}]
-    
-    save_problems(combined)
-    print(f"Добавлено/обновлено. Всего решений: {len(combined)}")
+    main()
