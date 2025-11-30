@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Помощник автоэлектрика</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; }
+    .card { background: #f9f9f9; padding: 16px; margin: 12px 0; border-left: 4px solid #007bff; }
+    input, button { padding: 8px; margin: 6px; }
+    h2 { margin-top: 24px; }
+  </style>
+</head>
+<body>
+  <h1>Помощник автоэлектрика</h1>
+  <p>Профессиональная база знаний по диагностике и ремонту</p>
+
+  <h2>Ищу решение по симптому</h2>
+  <div>
+    <button onclick="filterBySymptom('не заводится')">Не заводится</button>
+    <button onclick="filterBySymptom('горит check engine')">Горит Check Engine</button>
+    <button onclick="filterBySymptom('нет зарядки')">Нет зарядки</button>
+    <button onclick="filterBySymptom('утечка тока')">⚡ Утечка тока</button>
+  </div>
+
+  <h2>Поиск по коду ошибки</h2>
+  <input type="text" id="errorInput" placeholder="Например: P0300" />
+  <button onclick="searchByCode()">Найти</button>
+
+  <h2>Все решения</h2>
+  <div id="results"></div>
+
+  <script src="data/problems.js"></script>
+  <script>
+    let allProblems = window.problems || [];
+
+    function render(problems) {
+      const el = document.getElementById('results');
+      if (problems.length === 0) {
+        el.innerHTML = '<p>Ничего не найдено.</p>';
+        return;
+      }
+      el.innerHTML = problems.map(p => `
+        <div class="card">
+          <strong>${p.title}</strong><br>
+          <small>Марка: ${p.brand || '—'} | Симптомы: ${p.symptoms.join(', ')}</small><br>
+          <a href="${p.source_url}" target="_blank">Подробности</a>
+        </div>
+      `).join('');
+    }
+
+    function filterBySymptom(symptom) {
+      const filtered = allProblems.filter(p =>
+        p.symptoms.some(s => s.toLowerCase().includes(symptom.toLowerCase()))
+      );
+      render(filtered);
+    }
+
+    function searchByCode() {
+      const code = document.getElementById('errorInput').value.trim().toUpperCase();
+      if (!code) return;
+      const filtered = allProblems.filter(p =>
+        p.error_codes && p.error_codes.some(e => e.toUpperCase() === code)
+      );
+      render(filtered);
+    }
+
+    // Загрузка всех решений при старте
+    render(allProblems);
+  </script>
+</body>
+</html>
