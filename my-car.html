@@ -4,51 +4,53 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Моё авто</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%230d6efd'/><circle cx='50' cy='50' r='30' fill='white'/><path d='M40 30 L60 30 L60 40 L70 40 L50 70 L30 40 L40 40 Z' fill='%230d6efd'/></svg>">
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23a8b8b0'/><circle cx='50' cy='50' r='32' fill='%232c6f3c'/><path d='M40 30 L60 30 L60 40 L70 40 L50 70 L30 40 L40 40 Z' fill='white'/></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #ffffff;
-      --bg-card: #f8f9fa;
-      --text: #212529;
-      --text-secondary: #6c757d;
-      --border: #dee2e6;
-      --accent: #0d6efd;
-      --accent-hover: #0b5ed7;
-      --shadow: rgba(0,0,0,0.08);
-      --header-bg: #f1f5f9;
+      --bg-card: #f8fafc;
+      --text: #1e293b;
+      --text-secondary: #64748b;
+      --border: #e2e8f0;
+      --accent: #2c6f3c;
+      --accent-hover: #255d32;
+      --shadow: rgba(0,0,0,0.04);
+      --header-bg: #f1f9f3;
     }
     .dark-theme {
-      --bg: #121826;
-      --bg-card: #1e293b;
-      --text: #f1f5f9;
-      --text-secondary: #94a3b8;
-      --border: #334155;
-      --accent: #4fc3f7;
-      --accent-hover: #29b6f6;
-      --shadow: rgba(0,0,0,0.3);
-      --header-bg: #0f172a;
+      --bg: #12181a;
+      --bg-card: #1e292d;
+      --text: #e2e8f0;
+      --text-secondary: #94a8b8;
+      --border: #33414a;
+      --accent: #4caf50;
+      --accent-hover: #43a047;
+      --shadow: rgba(0,0,0,0.25);
+      --header-bg: #162123;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: 'Share Tech', monospace;
+      font-family: 'IBM Plex Mono', monospace;
       background-color: var(--bg);
       color: var(--text);
       transition: background-color 0.3s, color 0.3s;
       line-height: 1.6;
+      padding: 20px;
     }
     .container {
       max-width: 800px;
       margin: 0 auto;
-      padding: 20px;
     }
     header {
       text-align: center;
       padding: 24px 0;
       margin-bottom: 24px;
       background-color: var(--header-bg);
+      border-radius: 4px;
     }
-    h1 { font-size: 2rem; color: var(--accent); margin-bottom: 8px; }
+    h1 { font-size: 2rem; color: var(--accent); margin-bottom: 8px; font-weight: 500; }
+    .subtitle { color: var(--text-secondary); }
     nav {
       display: flex;
       justify-content: center;
@@ -61,8 +63,9 @@
       color: var(--accent);
       padding: 6px 14px;
       border: 1px solid var(--border);
-      border-radius: 20px;
+      border-radius: 0;
       font-size: 0.95rem;
+      font-weight: 500;
     }
     nav a:hover { background: var(--accent); color: white; }
     .theme-toggle {
@@ -83,12 +86,14 @@
     button {
       padding: 10px 16px;
       margin: 8px 8px 8px 0;
-      font-family: 'Share Tech', monospace;
+      font-family: 'IBM Plex Mono', monospace;
       background: var(--accent);
       color: white;
-      border: none;
-      border-radius: 6px;
+      border: 1px solid var(--accent);
+      border-radius: 0;
       cursor: pointer;
+      font-weight: 500;
+      transition: background 0.15s;
     }
     button:hover {
       background: var(--accent-hover);
@@ -97,8 +102,8 @@
       background: var(--bg-card);
       padding: 18px;
       margin: 16px 0;
-      border-radius: 10px;
-      box-shadow: 0 3px 8px var(--shadow);
+      border-radius: 4px;
+      box-shadow: 0 2px 6px var(--shadow);
       border-left: 4px solid var(--accent);
     }
     .empty { color: var(--text-secondary); font-style: italic; }
