@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Моё авто</title>
+  <title>Расшифровка VIN</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%230d6efd'/><circle cx='50' cy='50' r='30' fill='white'/><path d='M40 30 L60 30 L60 40 L70 40 L50 70 L30 40 L40 40 Z' fill='%230d6efd'/></svg>">
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech&display=swap" rel="stylesheet">
   <style>
@@ -80,15 +80,25 @@
       justify-content: center;
       cursor: pointer;
     }
-    button {
-      padding: 10px 16px;
-      margin: 8px 8px 8px 0;
+    input, button {
+      padding: 10px 14px;
       font-family: 'Share Tech', monospace;
+      font-size: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg-card);
+      color: var(--text);
+    }
+    input {
+      width: 100%;
+      margin: 8px 0;
+    }
+    button {
       background: var(--accent);
       color: white;
       border: none;
-      border-radius: 6px;
       cursor: pointer;
+      margin-top: 8px;
     }
     button:hover {
       background: var(--accent-hover);
@@ -101,24 +111,29 @@
       box-shadow: 0 3px 8px var(--shadow);
       border-left: 4px solid var(--accent);
     }
-    .empty { color: var(--text-secondary); font-style: italic; }
+    .error { color: #ff6b6b; }
+    .success { color: #4ade80; }
   </style>
 </head>
 <body>
   <div class="theme-toggle" id="themeToggle">☀️</div>
   <div class="container">
     <header>
-      <h1>Моё авто</h1>
-      <p class="subtitle">Сохранённый автомобиль для быстрого поиска решений</p>
+      <h1>Расшифровка VIN</h1>
+      <p class="subtitle">Введите 17-значный VIN вашего автомобиля</p>
     </header>
 
     <nav>
       <a href="index.html">Главная</a>
-      <a href="vin.html">Расшифровка VIN</a>
+      <a href="my-car.html">Мое авто</a>
     </nav>
 
-    <div id="carInfo"></div>
-    <div id="actions"></div>
+    <input type="text" id="vinInput" placeholder="Например: X7LLRRA1XMD123456" maxlength="17" />
+    <button onclick="decodeVIN()">Декодировать</button>
+
+    <div id="message"></div>
+    <div id="result"></div>
+    <button id="saveBtn" style="display:none;" onclick="saveToMyCar()">📦 Сохранить в «Моё авто»</button>
 
     <script>
       const themeToggle = document.getElementById('themeToggle');
@@ -135,44 +150,62 @@
         themeToggle.textContent = isDark ? '🌙' : '☀️';
       });
 
-      function renderMyCar() {
-        const saved = localStorage.getItem('myCar');
-        const info = document.getElementById('carInfo');
-        const actions = document.getElementById('actions');
+      let currentVINData = null;
 
-        if (!saved) {
-          info.innerHTML = '<p class="empty">Вы ещё не сохранили автомобиль.</p>';
-          actions.innerHTML = '';
+      async function decodeVIN() {
+        const vin = document.getElementById('vinInput').value.trim().toUpperCase();
+        const msg = document.getElementById('message');
+        const res = document.getElementById('result');
+        const saveBtn = document.getElementById('saveBtn');
+
+        msg.innerHTML = '';
+        res.innerHTML = '';
+        saveBtn.style.display = 'none';
+
+        if (vin.length !== 17 || !/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)) {
+          msg.innerHTML = '<div class="error">VIN должен содержать 17 символов (без I, O, Q)</div>';
           return;
         }
 
-        const car = JSON.parse(saved);
-        info.innerHTML = `
-          <div class="card">
-            <strong>${car.brand} ${car.model}</strong><br>
-            Год: ${car.year}<br>
-            Двигатель: ${car.engine || '—'}<br>
-            Кузов: ${car.body || '—'}<br>
-            VIN: ${car.vin}
-          </div>
-        `;
-        actions.innerHTML = `
-          <button onclick="clearMyCar()">🗑️ Удалить из памяти</button>
-          <button onclick="searchInBase('${car.brand}')">🔍 Найти решения для ${car.brand}</button>
-        `;
+        msg.innerHTML = 'Запрос к серверу...';
+        try {
+          const response = await fetch(`https://auto-api.ru/api/vin/${vin}`);
+          const data = await response.json();
+
+          if (data.error || !data.mark || !data.model) {
+            throw new Error(data.error || 'Не удалось расшифровать VIN');
+          }
+
+          currentVINData = {
+            vin: vin,
+            brand: data.mark,
+            model: data.model,
+            year: data.year || 'неизвестен',
+            engine: data.engine || '',
+            body: data.body || ''
+          };
+
+          res.innerHTML = `
+            <div class="card">
+              <strong>${currentVINData.brand} ${currentVINData.model}</strong><br>
+              Год: ${currentVINData.year}<br>
+              Двигатель: ${currentVINData.engine || '—'}<br>
+              Кузов: ${currentVINData.body || '—'}<br>
+              VIN: ${currentVINData.vin}
+            </div>
+          `;
+          saveBtn.style.display = 'inline-block';
+          msg.innerHTML = '<div class="success">VIN успешно расшифрован!</div>';
+        } catch (err) {
+          msg.innerHTML = `<div class="error">Ошибка: ${err.message || 'сервер недоступен'}</div>`;
+        }
       }
 
-      function clearMyCar() {
-        localStorage.removeItem('myCar');
-        renderMyCar();
+      function saveToMyCar() {
+        if (!currentVINData) return;
+        localStorage.setItem('myCar', JSON.stringify(currentVINData));
+        alert('✅ Автомобиль сохранён в «Моё авто»!');
       }
-
-      function searchInBase(brand) {
-        localStorage.setItem('autoFilterBrand', brand);
-        window.location.href = 'index.html';
-      }
-
-      renderMyCar();
     </script>
   </div>
 </body>
