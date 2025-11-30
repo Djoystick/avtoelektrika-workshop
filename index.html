@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Помощник автоэлектрика</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23a8b8b0'/><circle cx='50' cy='50' r='32' fill='%232c6f3c'/><path d='M40 30 L60 30 L60 40 L70 40 L50 70 L30 40 L40 40 Z' fill='white'/></svg>">
+  <link rel="icon" href="image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23a8b8b0'/><circle cx='50' cy='50' r='32' fill='%232c6f3c'/><path d='M40 30 L60 30 L60 40 L70 40 L50 70 L30 40 L40 40 Z' fill='white'/></svg>">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -82,10 +82,9 @@
       font-size: 0.95rem;
       padding: 6px 14px;
       border: 1px solid var(--border);
-      border-radius: 0; /* осциллограф */
+      border-radius: 0;
       transition: all 0.2s;
       font-weight: 500;
-      background: transparent;
     }
 
     nav a:hover {
@@ -140,7 +139,7 @@
       font-family: 'IBM Plex Mono', monospace;
       font-size: 0.95rem;
       border: 1px solid var(--border);
-      border-radius: 0; /* осциллограф */
+      border-radius: 0;
       background: var(--bg-card);
       color: var(--text);
       transition: border-color 0.2s, box-shadow 0.2s;
@@ -185,7 +184,7 @@
       background: var(--bg-card);
       padding: 18px;
       margin: 16px 0;
-      border-radius: 4px; /* слегка угловато */
+      border-radius: 4px;
       box-shadow: 0 2px 6px var(--shadow);
       border-left: 4px solid var(--accent);
       opacity: 0;
@@ -263,11 +262,15 @@
           <option value="Китай">Китай</option>
         </select>
 
-        <select id="brandFilter" onchange="updateYears()" disabled>
+        <select id="brandFilter" onchange="updateModels()" disabled>
           <option value="">— Выберите марку —</option>
         </select>
 
-        <select id="yearFilter" onchange="filterByBrandAndYear()" disabled>
+        <select id="modelFilter" onchange="updateYears()" disabled>
+          <option value="">— Выберите модель —</option>
+        </select>
+
+        <select id="yearFilter" onchange="filterByBrandModelYear()" disabled>
           <option value="">— Год выпуска —</option>
         </select>
       </div>
@@ -320,12 +323,70 @@
     });
 
     const BRAND_HIERARCHY = {
-      "Европа": ["Audi","BMW","Mercedes-Benz","Volkswagen","Skoda","Seat","Porsche","Volvo","Saab","Alfa Romeo","Fiat","Lancia","Renault","Peugeot","Citroen","DS","Opel","Vauxhall"],
-      "Япония": ["Toyota","Honda","Nissan","Mitsubishi","Subaru","Mazda","Suzuki","Lexus","Infiniti","Daihatsu","Isuzu"],
-      "Корея": ["Hyundai","Kia","SsangYong"],
-      "США": ["Ford","Chevrolet","Jeep","Dodge","Chrysler","Cadillac","GMC","Tesla","Lincoln","Buick"],
-      "Россия": ["ВАЗ / LADA","ГАЗ","УАЗ","Москвич"],
-      "Китай": ["Geely","Chery","Haval","Great Wall","Lifan","BYD","Changan","JAC","FAW","Dongfeng"]
+      "Европа": {
+        "Audi": ["A3", "A4", "A5", "A6", "A7", "A8", "Q3", "Q5", "Q7", "TT", "R8"],
+        "BMW": ["3 Series", "5 Series", "7 Series", "X3", "X5", "X7", "Z4", "M3", "M5"],
+        "Mercedes-Benz": ["C-Class", "E-Class", "S-Class", "GLA", "GLC", "GLE", "G-Class", "A-Class", "B-Class"],
+        "Volkswagen": ["Golf", "Passat", "Tiguan", "Polo", "Jetta", "Touran", "Arteon", "ID.3", "ID.4"],
+        "Skoda": ["Octavia", "Superb", "Kodiaq", "Fabia", "Karok", "Scala"],
+        "Seat": ["Ibiza", "Leon", "Arona", "Ateca", "Tarraco"],
+        "Porsche": ["911", "Cayenne", "Macan", "Panamera", "Taycan"],
+        "Volvo": ["XC40", "XC60", "XC90", "S60", "S90", "V60"],
+        "Alfa Romeo": ["Giulia", "Stelvio", "Tonale", "4C"],
+        "Fiat": ["500", "Punto", "Tipo", "Doblo", "Panda"],
+        "Renault": ["Clio", "Megane", "Kangoo", "Captur", "Arkana", "Scenic", "Twingo"],
+        "Peugeot": ["208", "308", "3008", "508", "2008", "3008"],
+        "Citroen": ["C3", "C4", "C5", "C3 Aircross", "C4 Cactus", "Berlingo"],
+        "Opel": ["Corsa", "Astra", "Insignia", "Mokka", "Grandland"],
+        "Vauxhall": ["Corsa", "Astra", "Insignia", "Mokka"]
+      },
+      "Япония": {
+        "Toyota": ["Corolla", "Camry", "RAV4", "Land Cruiser", "Hilux", "Prius", "Yaris", "Highlander", "Tacoma"],
+        "Honda": ["Civic", "Accord", "CR-V", "HR-V", "Pilot", "Fit", "Odyssey", "Insight"],
+        "Nissan": ["Sentra", "Altima", "Maxima", "Rogue", "Murano", "Pathfinder", "Leaf", "GT-R"],
+        "Mitsubishi": ["Outlander", "Lancer", "Pajero", "ASX", "Eclipse Cross", "Mirage"],
+        "Subaru": ["Impreza", "Legacy", "Outback", "Forester", "WRX", "Crosstrek"],
+        "Mazda": ["Mazda3", "Mazda6", "CX-5", "CX-30", "CX-9", "MX-5"],
+        "Suzuki": ["Swift", "Vitara", "Jimny", "Baleno", "Ignis", "SX4"],
+        "Lexus": ["ES", "RX", "NX", "LS", "UX", "GX", "LC"],
+        "Infiniti": ["Q50", "QX50", "QX60", "QX80", "QX55"],
+        "Daihatsu": ["Charade", "Terios", "Sirion", "Move", "Mira"]
+      },
+      "Корея": {
+        "Hyundai": ["Elantra", "Sonata", "Tucson", "Santa Fe", "Kona", "Venue", "Accent", "ioniq 5"],
+        "Kia": ["Rio", "Cerato", "Optima", "Sportage", "Sorento", "Seltos", "Stinger", "EV6"],
+        "SsangYong": ["Tivoli", "Rexton", "Korando", "Actyon"]
+      },
+      "США": {
+        "Ford": ["Focus", "Fusion", "Escape", "Explorer", "Mustang", "F-150", "Bronco", "Edge"],
+        "Chevrolet": ["Malibu", "Cruze", "Equinox", "Traverse", "Silverado", "Corvette", "Bolt"],
+        "Jeep": ["Cherokee", "Grand Cherokee", "Wrangler", "Compass", "Renegade", "Gladiator"],
+        "Dodge": ["Challenger", "Charger", "Durango", "Ram", "Journey"],
+        "Chrysler": ["300", "Pacifica", "Voyager", "Aspen"],
+        "Cadillac": ["ATS", "CT5", "Escalade", "XT4", "XT5", "Lyriq"],
+        "GMC": ["Sierra", "Yukon", "Acadia", "Terrain", "Hummer EV"],
+        "Tesla": ["Model S", "Model 3", "Model X", "Model Y", "Cybertruck"],
+        "Lincoln": ["MKZ", "Nautilus", "Aviator", "Navigator", "Corsair"],
+        "Buick": ["Encore", "Envision", "Regal", "Enclave", "Verano"]
+      },
+      "Россия": {
+        "ВАЗ / LADA": ["2101", "2106", "2107", "2110", "2112", "2114", "Granta", "Kalina", "Largus", "Vesta", "XRAY"],
+        "ГАЗ": ["GAZ-3110", "GAZ-31105", "GAZ-3302", "GAZ-2705", "GAZelle", "Sobol"],
+        "УАЗ": ["469", "Hunter", "Patriot", "Profi", "Pickup", "Cargo"],
+        "Москвич": ["408", "412", "2140", "2141", "3110", "412", "407"]
+      },
+      "Китай": {
+        "Geely": ["Emgrand", "Coolray", "Okavango", "Monjaro", "Atlas Pro"],
+        "Chery": ["Tiggo", "Arrizo", "Exeed", "Omoda", "QQ"],
+        "Haval": ["H6", "F7", "Jolion", "Dargo", "Big Dog"],
+        "Great Wall": ["Haval H6", "Wingle", "Poer", "Tank 300", "Tank 500"],
+        "Lifan": ["X60", "X50", "Myway", "820", "720"],
+        "BYD": ["Song", "Tang", "Han", "Atto 3", "Seal", "Dolphin"],
+        "Changan": ["CS35", "CS55", "CS75", "UNI-T", "UNI-K"],
+        "JAC": ["JS4", "JS6", "T8", "Refine", "S3"],
+        "FAW": ["Besturn B50", "Besturn X80", "Hongqi H5", "Hongqi H7"],
+        "Dongfeng": ["AX7", "AX5", "Fengshen AX7", "Fengguang", "Fengxing"]
+      }
     };
 
     const YEARS_2000_2025 = Array.from({length:26},(_,i)=>2000+i);
@@ -334,15 +395,18 @@
     function updateBrands() {
       const region = document.getElementById('regionFilter').value;
       const brandSelect = document.getElementById('brandFilter');
+      const modelSelect = document.getElementById('modelFilter');
       const yearSelect = document.getElementById('yearFilter');
 
       brandSelect.innerHTML = '<option value="">— Выберите марку —</option>';
+      modelSelect.innerHTML = '<option value="">— Выберите модель —</option>';
       yearSelect.innerHTML = '<option value="">— Год выпуска —</option>';
       brandSelect.disabled = !region;
+      modelSelect.disabled = true;
       yearSelect.disabled = true;
 
       if (region && BRAND_HIERARCHY[region]) {
-        BRAND_HIERARCHY[region].forEach(brand => {
+        Object.keys(BRAND_HIERARCHY[region]).forEach(brand => {
           const opt = document.createElement('option');
           opt.value = brand;
           opt.textContent = brand;
@@ -351,12 +415,37 @@
       }
     }
 
-    function updateYears() {
+    function updateModels() {
       const brand = document.getElementById('brandFilter').value;
+      const modelSelect = document.getElementById('modelFilter');
       const yearSelect = document.getElementById('yearFilter');
-      yearSelect.disabled = !brand;
+
+      modelSelect.innerHTML = '<option value="">— Выберите модель —</option>';
+      yearSelect.innerHTML = '<option value="">— Год выпуска —</option>';
+      modelSelect.disabled = !brand;
+      yearSelect.disabled = true;
 
       if (brand) {
+        for (const [region, brands] of Object.entries(BRAND_HIERARCHY)) {
+          if (brands[brand]) {
+            brands[brand].forEach(model => {
+              const opt = document.createElement('option');
+              opt.value = model;
+              opt.textContent = model;
+              modelSelect.appendChild(opt);
+            });
+            break;
+          }
+        }
+      }
+    }
+
+    function updateYears() {
+      const model = document.getElementById('modelFilter').value;
+      const yearSelect = document.getElementById('yearFilter');
+      yearSelect.disabled = !model;
+
+      if (model) {
         yearSelect.innerHTML = '<option value="">— Год выпуска —</option>';
         YEARS_2000_2025.forEach(year => {
           const opt = document.createElement('option');
@@ -384,6 +473,7 @@
           <strong>${p.title}</strong><br>
           <small>
             ${p.brand ? 'Марка: ' + p.brand + ' | ' : ''}
+            ${p.model ? 'Модель: ' + p.model + ' | ' : ''}
             ${p.year ? 'Год: ' + p.year + ' | ' : ''}
             Симптомы: ${(p.symptoms || []).join(', ')}<br>
             Ошибки: ${(p.error_codes || []).join(', ')}
@@ -393,11 +483,13 @@
       `).join('');
     }
 
-    function filterByBrandAndYear() {
+    function filterByBrandModelYear() {
       const brand = document.getElementById('brandFilter').value;
+      const model = document.getElementById('modelFilter').value;
       const year = document.getElementById('yearFilter').value;
       if (!brand) return render(allProblems);
       let filtered = allProblems.filter(p => p.brand === brand);
+      if (model) filtered = filtered.filter(p => p.model && p.model.includes(model));
       if (year) filtered = filtered.filter(p => !p.year || String(p.year) === year);
       render(filtered);
     }
@@ -427,7 +519,7 @@
           const car = JSON.parse(savedCarJson);
           let regionFound = '';
           for (const [region, brands] of Object.entries(BRAND_HIERARCHY)) {
-            if (brands.includes(car.brand)) {
+            if (brands[car.brand]) {
               regionFound = region;
               break;
             }
@@ -437,12 +529,18 @@
             updateBrands();
             setTimeout(() => {
               document.getElementById('brandFilter').value = car.brand;
-              updateYears();
+              updateModels();
               setTimeout(() => {
-                if (car.year && YEARS_2000_2025.includes(Number(car.year))) {
-                  document.getElementById('yearFilter').value = car.year;
+                if (car.model) {
+                  document.getElementById('modelFilter').value = car.model;
+                  updateYears();
                 }
-                filterByBrandAndYear();
+                setTimeout(() => {
+                  if (car.year && YEARS_2000_2025.includes(Number(car.year))) {
+                    document.getElementById('yearFilter').value = car.year;
+                  }
+                  filterByBrandModelYear();
+                }, 10);
               }, 10);
             }, 10);
           }
