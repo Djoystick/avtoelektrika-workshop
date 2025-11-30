@@ -4,31 +4,31 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Помощник автоэлектрика</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%230d6efd'/><circle cx='50' cy='50' r='30' fill='white'/><path d='M40 30 L60 30 L60 40 L70 40 L50 70 L30 40 L40 40 Z' fill='%230d6efd'/></svg>">
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%232c6f3c'/><circle cx='50' cy='50' r='30' fill='white'/><path d='M40 30 L60 30 L60 40 L70 40 L50 70 L30 40 L40 40 Z' fill='%232c6f3c'/></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #ffffff;
-      --bg-card: #f8f9fa;
-      --text: #212529;
-      --text-secondary: #6c757d;
-      --border: #dee2e6;
-      --accent: #0d6efd;
-      --accent-hover: #0b5ed7;
-      --shadow: rgba(0,0,0,0.08);
-      --header-bg: #f1f5f9;
+      --bg-card: #f8fafc;
+      --text: #1e293b;
+      --text-secondary: #64748b;
+      --border: #e2e8f0;
+      --accent: #2c6f3c;
+      --accent-hover: #255d32;
+      --shadow: rgba(0,0,0,0.04);
+      --header-bg: #f1f9f3;
     }
 
     .dark-theme {
-      --bg: #121826;
-      --bg-card: #1e293b;
-      --text: #f1f5f9;
-      --text-secondary: #94a3b8;
-      --border: #334155;
-      --accent: #4fc3f7;
-      --accent-hover: #29b6f6;
-      --shadow: rgba(0,0,0,0.3);
-      --header-bg: #0f172a;
+      --bg: #12181a;
+      --bg-card: #1e292d;
+      --text: #e2e8f0;
+      --text-secondary: #94a8b8;
+      --border: #33414a;
+      --accent: #4caf50;
+      --accent-hover: #43a047;
+      --shadow: rgba(0,0,0,0.25);
+      --header-bg: #162123;
     }
 
     * {
@@ -38,29 +38,34 @@
     }
 
     body {
-      font-family: 'Share Tech', monospace;
+      font-family: 'IBM Plex Mono', 'JetBrains Mono', monospace;
       background-color: var(--bg);
       color: var(--text);
       transition: background-color 0.3s, color 0.3s;
       line-height: 1.6;
+      padding-bottom: 40px;
     }
 
     header {
       text-align: center;
-      padding: 24px 16px;
+      padding: 28px 16px;
       background-color: var(--header-bg);
-      margin-bottom: 24px;
+      margin-bottom: 28px;
+      border-bottom: 1px solid var(--border);
     }
 
     h1 {
-      font-size: 2.2rem;
-      margin-bottom: 8px;
+      font-size: 2.1rem;
+      margin-bottom: 10px;
       color: var(--accent);
+      font-weight: 500;
     }
 
     p.subtitle {
-      font-size: 1.05rem;
+      font-size: 1.02rem;
       color: var(--text-secondary);
+      max-width: 700px;
+      margin: 0 auto;
     }
 
     nav {
@@ -79,6 +84,7 @@
       border: 1px solid var(--border);
       border-radius: 20px;
       transition: all 0.2s;
+      font-weight: 500;
     }
 
     nav a:hover {
@@ -111,31 +117,38 @@
     }
 
     .section {
-      margin: 28px 0;
+      margin: 30px 0;
     }
 
     h2 {
-      font-size: 1.3rem;
+      font-size: 1.25rem;
       margin-bottom: 14px;
       color: var(--accent);
+      font-weight: 500;
     }
 
     .controls {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 10px;
       margin: 12px 0;
     }
 
     input, button, select {
       padding: 10px 14px;
-      font-family: 'Share Tech', monospace;
+      font-family: 'IBM Plex Mono', monospace;
       font-size: 0.95rem;
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 8px;
       background: var(--bg-card);
       color: var(--text);
-      transition: border-color 0.2s;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(44, 111, 60, 0.15);
     }
 
     input, select {
@@ -147,6 +160,7 @@
       color: white;
       cursor: pointer;
       border: none;
+      font-weight: 500;
     }
 
     button:hover, .controls button:hover {
@@ -161,22 +175,22 @@
       font-size: 0.95rem;
       border-top: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
-      margin: 20px 0;
+      margin: 24px 0;
     }
 
     .card {
       background: var(--bg-card);
       padding: 18px;
-      margin: 14px 0;
+      margin: 16px 0;
       border-radius: 10px;
-      box-shadow: 0 3px 10px var(--shadow);
+      box-shadow: 0 2px 8px var(--shadow);
       border-left: 4px solid var(--accent);
     }
 
     .card a {
       color: var(--accent);
       text-decoration: none;
-      font-weight: bold;
+      font-weight: 500;
     }
 
     .card a:hover {
@@ -189,6 +203,9 @@
       }
       input, select {
         width: 100%;
+      }
+      h1 {
+        font-size: 1.8rem;
       }
     }
   </style>
@@ -306,10 +323,9 @@
       ]
     };
 
-    // Года с 2000 по 2025
     const YEARS_2000_2025 = Array.from({length: 26}, (_, i) => 2000 + i);
+    let allProblems = window.problems || [];
 
-    // === Функции фильтрации ===
     function updateBrands() {
       const region = document.getElementById('regionFilter').value;
       const brandSelect = document.getElementById('brandFilter');
@@ -346,9 +362,6 @@
       }
     }
 
-    // === Основные данные ===
-    let allProblems = window.problems || [];
-
     function render(problems) {
       const el = document.getElementById('results');
       document.getElementById('totalCount').textContent = problems.length;
@@ -378,16 +391,9 @@
     function filterByBrandAndYear() {
       const brand = document.getElementById('brandFilter').value;
       const year = document.getElementById('yearFilter').value;
-
-      if (!brand) {
-        render(allProblems);
-        return;
-      }
-
-      let filtered = allProblems.filter(p => p.brand && p.brand === brand);
-      if (year) {
-        filtered = filtered.filter(p => !p.year || String(p.year) === String(year));
-      }
+      if (!brand) return render(allProblems);
+      let filtered = allProblems.filter(p => p.brand === brand);
+      if (year) filtered = filtered.filter(p => !p.year || String(p.year) === year);
       render(filtered);
     }
 
@@ -407,10 +413,8 @@
       render(filtered);
     }
 
-    // Инициализация
     render(allProblems);
 
-    // Поддержка "Моё авто"
     document.addEventListener('DOMContentLoaded', () => {
       const savedCarJson = localStorage.getItem('myCar');
       if (savedCarJson) {
@@ -423,7 +427,6 @@
               break;
             }
           }
-
           if (regionFound) {
             document.getElementById('regionFilter').value = regionFound;
             updateBrands();
