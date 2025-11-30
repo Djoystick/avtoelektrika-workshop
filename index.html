@@ -139,7 +139,7 @@
     }
 
     input, select {
-      min-width: 180px;
+      min-width: 140px;
     }
 
     button, .controls button {
@@ -211,9 +211,25 @@
 
     <div class="section">
       <h2>По марке авто</h2>
-      <select id="brandFilter" onchange="filterByBrand()">
-        <option value="">— Все марки —</option>
-      </select>
+      <div class="controls">
+        <select id="regionFilter" onchange="updateBrands()">
+          <option value="">— Регион/Группа —</option>
+          <option value="Европа">Европа</option>
+          <option value="Япония">Япония</option>
+          <option value="Корея">Корея</option>
+          <option value="США">США</option>
+          <option value="Россия">Россия</option>
+          <option value="Китай">Китай</option>
+        </select>
+
+        <select id="brandFilter" onchange="updateYears()" disabled>
+          <option value="">— Выберите марку —</option>
+        </select>
+
+        <select id="yearFilter" onchange="filterByBrandAndYear()" disabled>
+          <option value="">— Год выпуска —</option>
+        </select>
+      </div>
     </div>
 
     <div class="section">
@@ -248,6 +264,7 @@
 
   <script src="data/problems.js"></script>
   <script>
+    // === Тема ===
     const themeToggle = document.getElementById('themeToggle');
     const body = document.body;
     const savedTheme = localStorage.getItem('theme');
@@ -262,29 +279,81 @@
       themeToggle.textContent = isDark ? '🌙' : '☀️';
     });
 
+    // === Иерархия марок (2000–2025) ===
+    const BRAND_HIERARCHY = {
+      "Европа": [
+        "Audi", "BMW", "Mercedes-Benz", "Volkswagen", "Skoda", "Seat",
+        "Porsche", "Volvo", "Saab", "Alfa Romeo", "Fiat", "Lancia",
+        "Renault", "Peugeot", "Citroen", "DS", "Opel", "Vauxhall"
+      ],
+      "Япония": [
+        "Toyota", "Honda", "Nissan", "Mitsubishi", "Subaru", "Mazda",
+        "Suzuki", "Lexus", "Infiniti", "Daihatsu", "Isuzu"
+      ],
+      "Корея": [
+        "Hyundai", "Kia", "SsangYong"
+      ],
+      "США": [
+        "Ford", "Chevrolet", "Jeep", "Dodge", "Chrysler", "Cadillac",
+        "GMC", "Tesla", "Lincoln", "Buick"
+      ],
+      "Россия": [
+        "ВАЗ / LADA", "ГАЗ", "УАЗ", "Москвич"
+      ],
+      "Китай": [
+        "Geely", "Chery", "Haval", "Great Wall", "Lifan", "BYD",
+        "Changan", "JAC", "FAW", "Dongfeng"
+      ]
+    };
+
+    // Года с 2000 по 2025
+    const YEARS_2000_2025 = Array.from({length: 26}, (_, i) => 2000 + i);
+
+    // === Функции фильтрации ===
+    function updateBrands() {
+      const region = document.getElementById('regionFilter').value;
+      const brandSelect = document.getElementById('brandFilter');
+      const yearSelect = document.getElementById('yearFilter');
+
+      brandSelect.innerHTML = '<option value="">— Выберите марку —</option>';
+      yearSelect.innerHTML = '<option value="">— Год выпуска —</option>';
+      brandSelect.disabled = !region;
+      yearSelect.disabled = true;
+
+      if (region && BRAND_HIERARCHY[region]) {
+        BRAND_HIERARCHY[region].forEach(brand => {
+          const opt = document.createElement('option');
+          opt.value = brand;
+          opt.textContent = brand;
+          brandSelect.appendChild(opt);
+        });
+      }
+    }
+
+    function updateYears() {
+      const brand = document.getElementById('brandFilter').value;
+      const yearSelect = document.getElementById('yearFilter');
+      yearSelect.disabled = !brand;
+
+      if (brand) {
+        yearSelect.innerHTML = '<option value="">— Год выпуска —</option>';
+        YEARS_2000_2025.forEach(year => {
+          const opt = document.createElement('option');
+          opt.value = year;
+          opt.textContent = year;
+          yearSelect.appendChild(opt);
+        });
+      }
+    }
+
+    // === Основные данные ===
     let allProblems = window.problems || [];
-
-    function getUniqueBrands() {
-      const brands = new Set(allProblems.map(p => p.brand).filter(b => b));
-      return Array.from(brands).sort();
-    }
-
-    function populateBrandFilter() {
-      const select = document.getElementById('brandFilter');
-      const brands = getUniqueBrands();
-      select.innerHTML = '<option value="">— Все марки —</option>';
-      brands.forEach(brand => {
-        const opt = document.createElement('option');
-        opt.value = brand;
-        opt.textContent = brand;
-        select.appendChild(opt);
-      });
-      document.getElementById('brandCount').textContent = brands.length;
-    }
 
     function render(problems) {
       const el = document.getElementById('results');
       document.getElementById('totalCount').textContent = problems.length;
+      const uniqueBrands = new Set(allProblems.map(p => p.brand).filter(b => b));
+      document.getElementById('brandCount').textContent = uniqueBrands.size;
       const errorCodes = new Set(problems.flatMap(p => p.error_codes || []));
       document.getElementById('errorCount').textContent = errorCodes.size;
 
@@ -297,6 +366,7 @@
           <strong>${p.title}</strong><br>
           <small>
             ${p.brand ? 'Марка: ' + p.brand + ' | ' : ''}
+            ${p.year ? 'Год: ' + p.year + ' | ' : ''}
             Симптомы: ${(p.symptoms || []).join(', ')}<br>
             Ошибки: ${(p.error_codes || []).join(', ')}
           </small><br>
@@ -305,14 +375,20 @@
       `).join('');
     }
 
-    function filterByBrand() {
+    function filterByBrandAndYear() {
       const brand = document.getElementById('brandFilter').value;
+      const year = document.getElementById('yearFilter').value;
+
       if (!brand) {
         render(allProblems);
-      } else {
-        const filtered = allProblems.filter(p => p.brand === brand);
-        render(filtered);
+        return;
       }
+
+      let filtered = allProblems.filter(p => p.brand && p.brand === brand);
+      if (year) {
+        filtered = filtered.filter(p => !p.year || String(p.year) === String(year));
+      }
+      render(filtered);
     }
 
     function filterBySymptom(symptom) {
@@ -331,17 +407,39 @@
       render(filtered);
     }
 
-    populateBrandFilter();
+    // Инициализация
     render(allProblems);
 
+    // Поддержка "Моё авто"
     document.addEventListener('DOMContentLoaded', () => {
-      const savedBrand = localStorage.getItem('autoFilterBrand');
-      if (savedBrand) {
-        localStorage.removeItem('autoFilterBrand');
-        const select = document.getElementById('brandFilter');
-        if (select && allProblems.length > 0) {
-          select.value = savedBrand;
-          filterByBrand();
+      const savedCarJson = localStorage.getItem('myCar');
+      if (savedCarJson) {
+        try {
+          const car = JSON.parse(savedCarJson);
+          let regionFound = '';
+          for (const [region, brands] of Object.entries(BRAND_HIERARCHY)) {
+            if (brands.includes(car.brand)) {
+              regionFound = region;
+              break;
+            }
+          }
+
+          if (regionFound) {
+            document.getElementById('regionFilter').value = regionFound;
+            updateBrands();
+            setTimeout(() => {
+              document.getElementById('brandFilter').value = car.brand;
+              updateYears();
+              setTimeout(() => {
+                if (car.year && YEARS_2000_2025.includes(Number(car.year))) {
+                  document.getElementById('yearFilter').value = car.year;
+                }
+                filterByBrandAndYear();
+              }, 10);
+            }, 10);
+          }
+        } catch (e) {
+          console.warn('Ошибка при восстановлении "Моё авто"');
         }
       }
     });
