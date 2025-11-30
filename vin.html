@@ -49,12 +49,18 @@
       cursor: pointer;
     }
     .info { color: #555; font-size: 0.9rem; }
+    .result {
+      background: #f8f8f8;
+      padding: 12px;
+      margin-top: 10px;
+      border-left: 3px solid #2b613f;
+    }
   </style>
 </head>
 <body>
   <div class="header">
     <h1>Расшифровка VIN</h1>
-    <p class="subtitle">Введите 17-значный VIN российского автомобиля (LADA, ВАЗ и др.)</p>
+    <p class="subtitle">Введите 17-значный VIN российского автомобиля (LADA, ВАЗ)</p>
   </div>
 
   <div class="nav">
@@ -72,7 +78,25 @@
   <button id="saveBtn" style="display:none;" onclick="saveToMyCar()">✅ Сохранить в «Моё авто»</button>
 
   <script>
-    // Глобальная переменная для хранения расшифрованного VIN
+    // Словарь для расшифровки
+    const VIN_DECODE_MAP = {
+      "XTA210": { brand: "ВАЗ / LADA", model: "2101-2107" },
+      "XTA211": { brand: "ВАЗ / LADA", model: "2110-2115" },
+      "XTA217": { brand: "ВАЗ / LADA", model: "Priora" },
+      "XTA218": { brand: "ВАЗ / LADA", model: "Granta" },
+      "XTA219": { brand: "ВАЗ / LADA", model: "Kalina" },
+      "XTAB15": { brand: "ВАЗ / LADA", model: "Vesta" },
+      "XTAXRAY": { brand: "ВАЗ / LADA", model: "XRAY" }
+    };
+
+    const YEAR_CODE = {
+      'X': 1999, 'Y': 2000, '1': 2001, '2': 2002, '3': 2003, '4': 2004,
+      '5': 2005, '6': 2006, '7': 2007, '8': 2008, '9': 2009,
+      'A': 2010, 'B': 2011, 'C': 2012, 'D': 2013, 'E': 2014,
+      'F': 2015, 'G': 2016, 'H': 2017, 'J': 2018, 'K': 2019,
+      'L': 2020, 'M': 2021, 'N': 2022, 'P': 2023, 'R': 2024, 'S': 2025
+    };
+
     let currentVINData = null;
 
     function decodeVIN() {
@@ -81,60 +105,41 @@
       const result = document.getElementById('result');
       const saveBtn = document.getElementById('saveBtn');
 
-      // Очистка
       message.innerHTML = '';
       result.innerHTML = '';
       saveBtn.style.display = 'none';
 
       const vin = (input.value || '').trim().toUpperCase();
 
-      // Проверка длины и формата
       if (vin.length !== 17 || !/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)) {
         message.innerHTML = '<span style="color:red;">VIN должен содержать 17 символов (без I, O, Q)</span>';
         return;
       }
 
-      // Поддержка только XTA (ВАЗ / LADA)
       if (!vin.startsWith('XTA')) {
-        message.innerHTML = '<span style="color:red;">Поддерживаются только российские VIN (начинаются с XTA)</span>';
+        message.innerHTML = '<span style="color:red;">Поддерживаются только VIN, начинающиеся с XTA (ВАЗ/LADA)</span>';
         return;
       }
 
-      // Определение года по 10-му символу
+      // Определение модели
+      const modelKey = vin.substring(0, 5); // XTA21
+      const modelInfo = VIN_DECODE_MAP[modelKey] || { brand: "ВАЗ / LADA", model: "неизвестна" };
+
+      // Определение года
       const yearChar = vin[9];
-      const yearMap = {
-        'X': 1999, 'Y': 2000, '1': 2001, '2': 2002, '3': 2003, '4': 2004,
-        '5': 2005, '6': 2006, '7': 2007, '8': 2008, '9': 2009,
-        'A': 2010, 'B': 2011, 'C': 2012, 'D': 2013, 'E': 2014,
-        'F': 2015, 'G': 2016, 'H': 2017, 'J': 2018, 'K': 2019,
-        'L': 2020, 'M': 2021, 'N': 2022, 'P': 2023, 'R': 2024, 'S': 2025
-      };
-      const year = yearMap[yearChar] || 'неизвестен';
+      const year = YEAR_CODE[yearChar] || 'неизвестен';
 
-      // Определение модели по позициям 4-7
-      const modelCode = vin.substring(3, 7);
-      let model = 'неизвестна';
-      if (modelCode.startsWith('210')) model = "ВАЗ 2101-2107";
-      else if (modelCode.startsWith('211')) model = "ВАЗ 2110-2115";
-      else if (modelCode.startsWith('217')) model = "Lada Priora";
-      else if (modelCode.startsWith('219')) model = "Lada Kalina";
-      else if (modelCode.startsWith('218')) model = "Lada Granta";
-      else if (modelCode === 'XRAY') model = "Lada XRAY";
-      else if (modelCode === 'B15R') model = "Lada Vesta";
-
-      // Сохраняем данные
       currentVINData = {
         vin: vin,
-        brand: "ВАЗ / LADA",
-        model: model,
+        brand: modelInfo.brand,
+        model: modelInfo.model,
         year: year,
         engine: "—",
         body: "—"
       };
 
-      // Показываем результат
       result.innerHTML = `
-        <div style="background:#f8f8f8; padding:12px; border-left:3px solid #2b613f; margin-top:10px;">
+        <div class="result">
           <strong>${currentVINData.brand} ${currentVINData.model}</strong><br>
           Год: ${currentVINData.year}<br>
           VIN: ${currentVINData.vin}
