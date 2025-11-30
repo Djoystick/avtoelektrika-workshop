@@ -104,7 +104,7 @@
 
     <nav>
       <a href="index.html">Главная</a>
-      <a href="vin.html">Расшифровка VIN</a>
+      <!-- VIN-страница убрана -->
     </nav>
 
     <div class="form-group">
@@ -140,9 +140,17 @@
     <script>
       const MODELS = {
         "ВАЗ / LADA": ["2101", "2106", "2107", "2110", "2112", "2114", "Granta", "Kalina", "Largus", "Vesta", "XRAY"],
-        "ГАЗ": ["GAZ-3110", "GAZelle", "Sobol"],
-        "УАЗ": ["Hunter", "Patriot", "Profi"],
-        "Москвич": ["412", "2141", "3110"]
+        "ГАЗ": ["GAZ-3110", "GAZelle", "Sobol", "GAZ-31105", "GAZ-3302", "GAZ-2705"],
+        "УАЗ": ["469", "Hunter", "Patriot", "Profi", "Pickup", "Cargo"],
+        "Москвич": ["408", "412", "2140", "2141", "3110", "407"]
+      };
+
+      // Карта регионов (для совместимости с index.html)
+      const REGION_MAP = {
+        "ВАЗ / LADA": "Россия",
+        "ГАЗ": "Россия",
+        "УАЗ": "Россия",
+        "Москвич": "Россия"
       };
 
       function populateModels() {
@@ -162,7 +170,8 @@
       function populateYears() {
         const yearSelect = document.getElementById('manualYear');
         yearSelect.innerHTML = '<option value="">— Выберите год —</option>';
-        for (let y = 1990; y <= 2025; y++) {
+        // Согласовано с index.html: 2000–2025
+        for (let y = 2000; y <= 2025; y++) {
           const opt = document.createElement('option');
           opt.value = y;
           opt.textContent = y;
@@ -180,7 +189,8 @@
           return;
         }
 
-        const car = { brand, model, year, vin: 'ручной ввод' };
+        const region = REGION_MAP[brand] || "Россия";
+        const car = { brand, model, year, region, source: 'manual' };
         localStorage.setItem('myCar', JSON.stringify(car));
         renderMyCar();
         alert('✅ Автомобиль сохранён!');
@@ -191,7 +201,7 @@
         const el = document.getElementById('savedCar');
 
         if (!saved) {
-          el.innerHTML = '<p class="empty">Вы ещё не сохранили автомобиль.<br>Используйте VIN или введите вручную.</p>';
+          el.innerHTML = '<p class="empty">Вы ещё не сохранили автомобиль.<br>Введите его вручную.</p>';
           return;
         }
 
@@ -200,14 +210,14 @@
           <div class="card">
             <strong>${car.brand} ${car.model}</strong><br>
             Год: ${car.year}<br>
-            <button onclick="useCarInSearch('${car.brand}', '${car.model}')">🔍 Найти решения</button>
+            <button onclick="useInSearch()">🔍 Найти решения</button>
             <button onclick="clearMyCar()">🗑️ Удалить</button>
           </div>
         `;
       }
 
-      function useCarInSearch(brand, model) {
-        localStorage.setItem('myCar', JSON.stringify({ brand, model }));
+      function useInSearch() {
+        // Просто перейти — данные уже в localStorage
         window.location.href = 'index.html';
       }
 
