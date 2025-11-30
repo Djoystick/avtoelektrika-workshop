@@ -311,6 +311,17 @@
 
     <h2>Топ решений</h2>
     <div id="results"></div>
+
+    <!-- Обратная связь -->
+    <div class="section" style="text-align: center; color: var(--text-secondary); font-size: 0.95rem; margin-top: 30px;">
+      <p>Не нашли решение? <a href="https://t.me/exploitex" target="_blank">Напишите нам в Telegram</a> — поможем!</p>
+    </div>
+
+    <!-- Дата обновления и экспорт -->
+    <div class="section" style="text-align: center; margin-top: 10px;">
+      <small id="lastUpdate" style="color: var(--text-secondary);"></small><br>
+      <button onclick="exportToCSV()" style="margin-top: 8px; padding: 6px 12px; font-size: 0.9rem; background: var(--accent); color: white; border: 1px solid var(--accent); border-radius: 0;">📥 Скачать базу (CSV)</button>
+    </div>
   </div>
 
   <!-- Загрузочный экран -->
@@ -558,12 +569,20 @@
         return;
       }
 
+      const sourceMap = {
+        'drive2': 'drive2.ru',
+        'drom': 'drom.ru',
+        'don': 'forums.don.ru'
+      };
+
       el.innerHTML = problems.map(p => {
         const symptomsWithIcons = (p.symptoms || []).map(symptom => {
           const key = Object.keys(SYMPTOM_ICONS).find(k => symptom.toLowerCase().includes(k));
           const icon = key ? SYMPTOM_ICONS[key] : '🔧';
           return `${icon} ${escapeHtml(symptom)}`;
         }).join(', ');
+
+        const sourceLabel = p.source ? `[${sourceMap[p.source] || p.source}]` : '';
 
         return `
           <div class="card">
@@ -575,7 +594,7 @@
               Симптомы: ${symptomsWithIcons}<br>
               Ошибки: ${(p.error_codes || []).map(c => escapeHtml(c)).join(', ')}
             </small><br>
-            <a href="${encodeURI(p.source_url)}" target="_blank">Подробности</a>
+            <a href="${encodeURI(p.source_url)}" target="_blank">Подробности ${sourceLabel}</a>
           </div>
         `;
       }).join('');
@@ -608,7 +627,45 @@
       render(filtered);
     }
 
+    // ← 4.2 и 4.5
+    function exportToCSV() {
+      if (allProblems.length === 0) {
+        alert('База пуста');
+        return;
+      }
+
+      const headers = ['title', 'brand', 'model', 'year', 'symptoms', 'error_codes', 'source', 'source_url'];
+      const rows = allProblems.map(p => 
+        headers.map(h => {
+          let val = p[h] || '';
+          if (Array.isArray(val)) val = val.join('; ');
+          if (typeof val === 'string' && (val.includes(',') || val.includes('"') || val.includes('\n'))) {
+            val = `"${val.replace(/"/g, '""')}"`;
+          }
+          return val;
+        }).join(',')
+      );
+
+      const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + 
+        [headers.join(','), ...rows].join('\n');
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', 'avtoelektrika-base.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function showLastUpdate() {
+      const now = new Date();
+      const today = now.toLocaleDateString('ru-RU'); // 12 мая 2025
+      document.getElementById('lastUpdate').textContent = `База обновлена: ${today}`;
+    }
+
     render(allProblems);
+    showLastUpdate();
 
     document.addEventListener('DOMContentLoaded', () => {
       const savedCarJson = localStorage.getItem('myCar');
