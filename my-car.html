@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Моё авто</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+    .card { background: #f0fff0; padding: 16px; margin: 12px 0; border-left: 4px solid #28a745; }
+    button { padding: 8px 12px; margin: 6px; }
+    .empty { color: #666; }
+    a { color: #007bff; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <h1>Моё авто</h1>
+
+  <div id="carInfo"></div>
+  <div id="actions"></div>
+
+  <a href="vin.html">← Расшифровать новый VIN</a><br>
+  <a href="index.html">← К базе знаний</a>
+
+  <script>
+    function renderMyCar() {
+      const saved = localStorage.getItem('myCar');
+      const info = document.getElementById('carInfo');
+      const actions = document.getElementById('actions');
+
+      if (!saved) {
+        info.innerHTML = '<p class="empty">Вы ещё не сохранили автомобиль.</p>';
+        actions.innerHTML = '';
+        return;
+      }
+
+      const car = JSON.parse(saved);
+      info.innerHTML = `
+        <div class="card">
+          <strong>${car.brand} ${car.model}</strong><br>
+          Год: ${car.year}<br>
+          Двигатель: ${car.engine || '—'}<br>
+          Кузов: ${car.body || '—'}<br>
+          VIN: ${car.vin}
+        </div>
+      `;
+      actions.innerHTML = `
+        <button onclick="clearMyCar()">🗑️ Удалить из памяти</button>
+        <button onclick="searchInBase('${car.brand}')">🔍 Найти решения для ${car.brand}</button>
+      `;
+    }
+
+    function clearMyCar() {
+      localStorage.removeItem('myCar');
+      renderMyCar();
+    }
+
+    function searchInBase(brand) {
+      // Перенаправляем на главную с фильтром по марке
+      // Но так как фильтр у нас на JS — просто сохраним марку и перейдём
+      localStorage.setItem('autoFilterBrand', brand);
+      window.location.href = 'index.html';
+    }
+
+    // При загрузке
+    renderMyCar();
+  </script>
+</body>
+</html>
